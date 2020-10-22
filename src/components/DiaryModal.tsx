@@ -172,7 +172,14 @@ export function TestEditBody({date, wheather, text, onClose}: Edit) {
 
   return (
     <div className={classes.paper}>
-      <DateTimePicker value={stateDate} onChange={handleDateChange}/>
+      <DateTimePicker 
+        value={stateDate} 
+        variant='inline'
+        onChange={handleDateChange}
+        ampm={false}
+        disableFuture
+        format='yyyy/MM/dd HH:mm'
+      />
       <FormControl >
         <Select 
           value={wSelect}
