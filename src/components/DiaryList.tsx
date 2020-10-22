@@ -12,60 +12,22 @@ import TableRow from '@material-ui/core/TableRow';
 
 import DiaryModal from './DiaryModal';
 
-interface Column {
-  id: 'date' | 'wheather' | 'text';
+import { Diary, RawDiary, decodeWheather, decodeFeeling } from '../model/Diary';
+
+type Column = {
+  id: 'date' | 'wheather' | 'feeling' | 'text';
   label: string;
   minWidth?: number;
-  align?: 'right';
-  format?: (value: string) => string;
-}
+  align?: 'center';
+  format?: (value: any) => string;
+};
 
 const columns: Column[] = [
-  { id: 'date', label: '日付', minWidth: 10 },
-  { id: 'wheather', label: '天気', minWidth: 70 },
-  { id: 'text', label: '本文', minWidth: 170, format: (value: string) => value.slice(0, 50) }
+  { id: 'date', label: 'Date', minWidth: 20, format: (value: Date) => value.toLocaleString() },
+  { id: 'wheather', label: 'Weather', minWidth: 20, format: (value: number) => decodeWheather(value) },
+  { id: 'feeling', label: 'Feelings', minWidth: 20, format: (value: number) => decodeFeeling(value) },
+  { id: 'text', label: 'Export', minWidth: 170, format: (value: string) => value.slice(0, 50) + '...' }
 ];
-
-type RawDiary = {
-  date: string,
-  wheather: number,
-  text: string
-};
-type Diary = {
-  date: string,
-  wheather: string,
-  text: string
-};
-function createRow({ date, wheather, text }: RawDiary): Diary {
-  date = new Date(date).toLocaleString();
-  let tempW: string = '';
-  switch(wheather) {
-    case 0:
-      tempW = '☀';
-      break;
-    case 1:
-      tempW = '☁';
-      break;
-    case 2:
-      tempW = '☂';
-      break;
-    case 3:
-      tempW = '⚡';
-      break;
-    case 4:
-      tempW = '⛄';
-      break;
-    case 5:
-      tempW = '🌬';
-      break;
-    default:
-      tempW = '☀';
-  }
-
-  return {
-    date, wheather: tempW, text
-  }
-}
 
 const useStyles = makeStyles({
   root: {
@@ -87,6 +49,26 @@ const useStyles = makeStyles({
   }
 });
 
+function createRow({ 
+  inner_user_id,
+  diary_id,
+  date,
+  update_date,
+  wheather,
+  feeling,
+  text
+ }: RawDiary): Diary {
+  return {
+    inner_user_id,
+    diary_id,
+    date: new Date(date),
+    update_date: new Date(update_date),
+    wheather,
+    feeling,
+    text
+  };
+}
+
 export default function DiaryList() {
   const classes = useStyles();
   const [page, setPage] = useState(0);
@@ -98,8 +80,8 @@ export default function DiaryList() {
   useEffect(() => {
     (async () => {
       const res: Response = await fetch('../1000.json');
-      const rawDiaries: RawDiary[] = (await res.json()).diaries;
-      setRow(rawDiaries.map(createRow));
+      const diaries: RawDiary[] = (await res.json()).diaries;
+      setRow(diaries.map(createRow));
     })();
   }, []);
 
@@ -134,9 +116,9 @@ export default function DiaryList() {
           <TableBody>
             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
               return (
-                <TableRow 
+                <TableRow
                   className={classes.row}
-                  key={row.date}
+                  key={row.diary_id}
                   hover 
                   role="checkbox" 
                   tabIndex={-1}
@@ -169,7 +151,7 @@ export default function DiaryList() {
         onChangePage={handleChangePage}
         onChangeRowsPerPage={handleChangeRowsPerPage}
       />
-      <DiaryModal diary={selected} isOpen={open} onClose={handleModalClose}/>
+      <DiaryModal diary={selected} open={open} onClose={handleModalClose}/>
     </Paper>
   );
 }

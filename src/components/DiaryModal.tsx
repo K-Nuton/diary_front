@@ -11,6 +11,17 @@ import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteIcon from '@material-ui/icons/Delete';
 
+import {
+  Diary, Wheather, Feeling, decodeWheather, decodeFeeling
+} from '../model/Diary';
+
+const emptyDiary: Diary = {
+  date: new Date(),
+  wheather: Wheather.SUNNY,
+  feeling: Feeling.HAPPY,
+  text: ''
+};
+
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     modal: {
@@ -64,17 +75,12 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-type Diary = {
-  date: string;
-  wheather: string;
-  text: string;
-};
 type DiaryModal = {
   diary: Diary | null;
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
 }
-export default function DiaryModal({ diary, isOpen, onClose }: DiaryModal): JSX.Element {
+export default function DiaryModal({ diary, open, onClose }: DiaryModal): JSX.Element {
   const classes = useStyles();
   const [edit, setEdit] = useState(false);
 
@@ -87,19 +93,15 @@ export default function DiaryModal({ diary, isOpen, onClose }: DiaryModal): JSX.
   const exitEdit = useCallback(() => setEdit(false), []);
 
   const normalBody = (
-    <TestBody
-      date={diary ? diary.date : ''}
-      wheather={diary ? diary.wheather : new Date().toISOString()}
-      text={diary ? diary.text : ''}
+    <ViewBody
+      diary={diary ? diary : emptyDiary}
       onClick={enterEdit}
     />
   );
 
   const editBody = (
-    <TestEditBody
-      date={diary ? diary.date : ''}
-      wheather={diary ? diary.wheather : new Date().toISOString()}
-      text={diary ? diary.text : ''}
+    <EditBody
+      diary={diary ? diary : emptyDiary}
       onClose={exitEdit}
     />
   );
@@ -110,7 +112,7 @@ export default function DiaryModal({ diary, isOpen, onClose }: DiaryModal): JSX.
       aria-describedby='transition-modal-description'
       disableBackdropClick={edit}
       className={classes.modal}
-      open={isOpen}
+      open={open}
       onClose={handleClose}
       closeAfterTransition
       BackdropComponent={Backdrop}
@@ -119,7 +121,7 @@ export default function DiaryModal({ diary, isOpen, onClose }: DiaryModal): JSX.
       }}
     >
       <>
-      <Fade in={isOpen}>
+      <Fade in={open}>
         {edit ? editBody : normalBody}
       </Fade>
       </>
@@ -127,19 +129,17 @@ export default function DiaryModal({ diary, isOpen, onClose }: DiaryModal): JSX.
   );
 }
 
-type Normal = {
-  date: string,
-  wheather: string,
-  text: string,
-  onClick: () => void
+type ViewBody = {
+  diary: Diary;
+  onClick: () => void;
 }
-export function TestBody({ date, wheather, text, onClick }: Normal) {
+export function ViewBody({ diary, onClick }: ViewBody) {
   const classes = useStyles();
 
   return (
     <div className={classes.paper}>
-      <h2 id='transition-modal-title'>{date + " " + wheather}</h2>
-      <p id='transition-modal-description' className={classes.textOverFlow}>{text}</p>
+      <h2 id='transition-modal-title'>{diary.date.toLocaleString() + " " + decodeWheather(diary.wheather) + " " + decodeFeeling(diary.feeling)}</h2>
+      <p id='transition-modal-description' className={classes.textOverFlow}>{diary.text}</p>
       <div className={classes.enterEdit}>
         <Fab color="secondary" aria-label="edit" size='medium' onClick={onClick}>
           <EditIcon />
@@ -149,23 +149,21 @@ export function TestBody({ date, wheather, text, onClick }: Normal) {
   );
 }
 
-type Edit = {
-  date: string;
-  wheather: string;
-  text: string;
+type EditBody = {
+  diary: Diary;
   onClose: () => void;
 }
-export function TestEditBody({date, wheather, text, onClose}: Edit) {
+export function EditBody({diary, onClose}: EditBody) {
   const classes = useStyles();
-  const [stateDate, setDate] = useState(new Date(date));
+  const [date, setDate] = useState(diary.date);
   const handleDateChange = useCallback((date) => setDate(date), []);
 
-  const [wSelect, setWheather] = useState(0);
+  const [wheather, setWheather] = useState(diary.wheather);
   const handleWChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setWheather(event.target.value as number);
   };
-
-  const [feeling, setFeeling] = useState(0);
+  
+  const [feeling, setFeeling] = useState(diary.feeling);
   const handleFChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setFeeling(event.target.value as number);
   };
@@ -173,7 +171,7 @@ export function TestEditBody({date, wheather, text, onClose}: Edit) {
   return (
     <div className={classes.paper}>
       <DateTimePicker 
-        value={stateDate} 
+        value={date} 
         variant='inline'
         onChange={handleDateChange}
         ampm={false}
@@ -182,26 +180,26 @@ export function TestEditBody({date, wheather, text, onClose}: Edit) {
       />
       <FormControl >
         <Select 
-          value={wSelect}
+          value={wheather}
           onChange={handleWChange}
-        >
-          <MenuItem value={0}>
-            <span role='img' aria-label='sunny'>🔆</span>
+        > 
+          <MenuItem value={Wheather.SUNNY}>
+            <span role='img' aria-label='sunny'>{decodeWheather(Wheather.SUNNY)}</span>
           </MenuItem>
-          <MenuItem value={1}>
-            <span role='img' aria-label='cloudy'>☁</span>
+          <MenuItem value={Wheather.CLOUDY}>
+            <span role='img' aria-label='cloudy'>{decodeWheather(Wheather.CLOUDY)}</span>
           </MenuItem>
-          <MenuItem value={2}>
-            <span role='img' aria-label='rainy'>☔</span>
+          <MenuItem value={Wheather.RAINY}>
+            <span role='img' aria-label='rainy'>{decodeWheather(Wheather.RAINY)}</span>
           </MenuItem>
-          <MenuItem value={3}>
-            <span role='img' aria-label='thunder'>⚡</span>
+          <MenuItem value={Wheather.THUNDER}>
+            <span role='img' aria-label='thunder'>{decodeWheather(Wheather.THUNDER)}</span>
           </MenuItem>
-          <MenuItem value={4}>
-            <span role='img' aria-label='snow'>⛄</span>
+          <MenuItem value={Wheather.SNOW}>
+            <span role='img' aria-label='snow'>{decodeWheather(Wheather.SNOW)}</span>
           </MenuItem>
-          <MenuItem value={5}>
-            <span role='img' aria-label='wind'>🌀</span>
+          <MenuItem value={Wheather.WIND}>
+            <span role='img' aria-label='wind'>{decodeWheather(Wheather.WIND)}</span>
           </MenuItem>
         </Select>
       </FormControl>
@@ -210,27 +208,27 @@ export function TestEditBody({date, wheather, text, onClose}: Edit) {
           value={feeling}
           onChange={handleFChange}
         >
-          <MenuItem value={0}>
-            <span role='img' aria-label='happy'>😀</span>
+          <MenuItem value={Feeling.HAPPY}>
+            <span role='img' aria-label='happy'>{decodeFeeling(Feeling.HAPPY)}</span>
           </MenuItem>
-          <MenuItem value={1}>
-            <span role='img' aria-label='normal'>😐</span>
+          <MenuItem value={Feeling.NORMAL}>
+            <span role='img' aria-label='normal'>{decodeFeeling(Feeling.NORMAL)}</span>
           </MenuItem>
-          <MenuItem value={2}>
-            <span role='img' aria-label='little-bit-sad'>😥</span>
+          <MenuItem value={Feeling.LIT_SAD}>
+            <span role='img' aria-label='little-bit-sad'>{decodeFeeling(Feeling.LIT_SAD)}</span>
           </MenuItem>
-          <MenuItem value={3}>
-            <span role='img' aria-label='sad'>😭</span>
+          <MenuItem value={Feeling.SAD}>
+            <span role='img' aria-label='sad'>{decodeFeeling(Feeling.SAD)}</span>
           </MenuItem>
-          <MenuItem value={4}>
-            <span role='img' aria-label='angry'>😡</span>
+          <MenuItem value={Feeling.ANGRY}>
+            <span role='img' aria-label='angry'>{decodeFeeling(Feeling.ANGRY)}</span>
           </MenuItem>
         </Select>
       </FormControl>
       <InputBase
         className={classes.editTextMargin}
         rows={20}
-        defaultValue={text}
+        defaultValue={diary.text}
         multiline
         fullWidth
         rowsMax={20}
