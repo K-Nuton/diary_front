@@ -11,7 +11,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import FilterListIcon from '@material-ui/icons/FilterList';
-import { FormControlLabel, Popover, Switch } from '@material-ui/core';
+import { Button, FormControlLabel, Popover, Switch } from '@material-ui/core';
 import { DatePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 
@@ -73,6 +73,11 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     popover: {
       padding: '12px',
+    },
+    popoverSearchButton: {
+      marginTop: '10px',
+      display: 'flex',
+      justifyContent: 'flex-end'
     }
   }),
 );
@@ -230,6 +235,15 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
                       minDate={fromDate}
                     />
                   </div>
+                </div>
+                <div className={classes.popoverSearchButton} >
+                  <Button
+                    disabled={!checked}
+                    variant="contained" 
+                    color='primary'
+                  >
+                    検索
+                  </Button>
                 </div>
               </div>
             </Popover>
