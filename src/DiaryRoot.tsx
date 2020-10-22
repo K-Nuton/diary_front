@@ -71,6 +71,7 @@ const DiaryRoot: React.FC = () => {
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [target, setTarget] = useState<Diary | null>(null);
   const onSelected = (target: Diary) => {
+    setEdit(false);
     target.onSave = ({ date, wheather, feeling, text }: Diary) => {
       console.log(date, wheather, feeling, text);
     };
