@@ -1,7 +1,7 @@
 import { createStyles, FormControl, InputBase, makeStyles, MenuItem, Modal, Select, Theme } from '@material-ui/core';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { DateTimePicker } from '@material-ui/pickers';
 
 import Fab from '@material-ui/core/Fab';
@@ -78,19 +78,15 @@ const useStyles = makeStyles((theme: Theme) =>
 type DiaryModal = {
   diary: Diary | null;
   open: boolean;
+  edit: boolean;
+  toggleEdit: (edit: boolean) => void;
   onClose: () => void;
 }
-export default function DiaryModal({ diary, open, onClose }: DiaryModal): JSX.Element {
+export default function DiaryModal({ diary, open, edit, toggleEdit, onClose }: DiaryModal): JSX.Element {
   const classes = useStyles();
-  const [edit, setEdit] = useState(false);
 
-  const handleClose = () => {
-    onClose();
-    setEdit(false);
-  };
-
-  const enterEdit = useCallback(() => setEdit(true), []);
-  const exitEdit = useCallback(() => setEdit(false), []);
+  const enterEdit = () => toggleEdit(true);
+  const exitEdit = () => diary?.onCancel ? diary.onCancel() : toggleEdit(false);
 
   const normalBody = (
     <ViewBody
@@ -113,7 +109,7 @@ export default function DiaryModal({ diary, open, onClose }: DiaryModal): JSX.El
       disableBackdropClick={edit}
       className={classes.modal}
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       closeAfterTransition
       BackdropComponent={Backdrop}
       BackdropProps={{
@@ -138,7 +134,9 @@ export function ViewBody({ diary, onClick }: ViewBody) {
 
   return (
     <div className={classes.paper}>
-      <h2 id='transition-modal-title'>{diary.date.toLocaleString() + " " + decodeWheather(diary.wheather) + " " + decodeFeeling(diary.feeling)}</h2>
+      <h2 id='transition-modal-title'>
+        {diary.date.toLocaleString() + " " + decodeWheather(diary.wheather) + " " + decodeFeeling(diary.feeling)}
+      </h2>
       <p id='transition-modal-description' className={classes.textOverFlow}>{diary.text}</p>
       <div className={classes.enterEdit}>
         <Fab color="secondary" aria-label="edit" size='medium' onClick={onClick}>
@@ -166,6 +164,16 @@ export function EditBody({diary, onClose}: EditBody) {
   const [feeling, setFeeling] = useState(diary.feeling);
   const handleFChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setFeeling(event.target.value as number);
+  };
+
+  const textRef =  useRef<HTMLTextAreaElement>(null);;
+  const handleOnSave = () => {
+    const text = textRef.current ? textRef.current.value : '';
+    diary.onSave ? diary.onSave({ date, wheather, feeling, text }) : void(0)
+  };
+
+  const handleOnDelete = () => {
+    diary.onDelete ? diary.onDelete() : void(0);
   };
 
   return (
@@ -226,6 +234,7 @@ export function EditBody({diary, onClose}: EditBody) {
         </Select>
       </FormControl>
       <InputBase
+        inputRef={textRef}
         className={classes.editTextMargin}
         rows={20}
         defaultValue={diary.text}
@@ -235,13 +244,14 @@ export function EditBody({diary, onClose}: EditBody) {
         inputProps={{ 'aria-label': 'naked' }}
       />
       <div className={classes.editButtonWrapper}>
-        <div className={classes.delete}>
+        <div className={classes.delete} onClick={handleOnDelete}>
           <IconButton aria-label="delete">
             <DeleteIcon fontSize="small" />
           </IconButton>
         </div>
         <div className={classes.close}>
           <Fab
+            onClick={handleOnSave}
             variant="extended"
             size="medium"
             color="primary"
