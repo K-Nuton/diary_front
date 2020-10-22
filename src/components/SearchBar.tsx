@@ -82,10 +82,21 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
+type DateSwitch = {
+  date: Date;
+  disabled: boolean;
+  onChange: (date: MaterialUiPickersDate) => void;
+  onDisabled: (disabled: boolean) => void;
+}
 type PrimarySearchAppBar = {
-  sideOnClick: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void) | undefined;
+  onEnter: (input: string) => void;
+  filter: {
+    from: DateSwitch,
+    to: DateSwitch,
+    onClick: () => void;
+  }
 };
-export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar) {
+export default function PrimarySearchAppBar({ onEnter, filter }: PrimarySearchAppBar) {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -121,25 +132,31 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
     setFilterAnchor(event.currentTarget);
   };
 
+  const closeFilter = () => {
+    filter.onClick();
+    setFilterAnchor(null);
+  };
+
   const handleFilterClose = () => setFilterAnchor(null);
 
   const filterOpen = Boolean(filterAnchor);
   const filterId = filterOpen ? 'filter-popover' : undefined;
 
-  const [fromDate, setFromDate] = useState(new Date());
-  const handleFromDateChange = (date: MaterialUiPickersDate) => setFromDate(date as Date);
-
-  const [toDate, setToDate] = useState(new Date());
-  const handleToDateChange = (date: MaterialUiPickersDate) => setToDate(date as Date);
-
-  const [checked, setCheck] = useState(false);
   const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCheck(event.target.checked);
+    filter.from.onDisabled(!event.target.checked);
+    if (!event.target.checked)
+      filter.to.onDisabled(!event.target.checked);
   };
-  const [toCheck, setToCheck] = useState(false);
+
   const handleToSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setToCheck(event.target.checked);
+    filter.to.onDisabled(!event.target.checked);
   };
+
+  const handleInputEnter = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if ('Enter' === event.key)
+      onEnter((event.target as HTMLTextAreaElement).value);
+  };
+
 
   return (
     <div className={classes.grow}>
@@ -162,6 +179,7 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
             </div>
             <InputBase
               placeholder="Search…"
+              onKeyPress={handleInputEnter}
               classes={{
                 root: classes.inputRoot,
                 input: classes.inputInput,
@@ -173,7 +191,7 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
               aria-label="date-filter"
               aria-controls={filterId}
               aria-haspopup="true"
-              color={checked ? 'secondary' : 'inherit'}
+              color={!filter.from.disabled ? 'secondary' : 'inherit'}
               onClick={handleFilterClick}
             >
               <FilterListIcon />
@@ -196,7 +214,7 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
                 <FormControlLabel 
                   control={
                     <Switch
-                      checked={checked}
+                      checked={!filter.from.disabled}
                       onChange={handleSwitchChange}
                       color='primary'
                       name='switch date filter'
@@ -207,18 +225,18 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
                 />
                 <div>
                   <DatePicker 
-                    disabled={!checked}
+                    disabled={filter.from.disabled}
                     label="from"
                     variant='inline'
-                    value={fromDate}
-                    onChange={handleFromDateChange}
+                    value={filter.from.date}
+                    onChange={filter.from.onChange}
                     format='yyyy/MM/dd'
                     disableFuture
                   />
                   <div>
                     <Switch
-                      disabled={!checked}
-                      checked={toCheck}
+                      disabled={filter.from.disabled}
+                      checked={!filter.to.disabled}
                       onChange={handleToSwitchChange}
                       color="primary"
                       name="switch to date"
@@ -227,20 +245,21 @@ export default function PrimarySearchAppBar({ sideOnClick }: PrimarySearchAppBar
                     <DatePicker 
                       label="to"
                       variant='inline'
-                      value={toDate}
-                      onChange={handleToDateChange}
+                      value={filter.to.date}
+                      onChange={filter.to.onChange}
                       format='yyyy/MM/dd'
                       disableFuture
-                      disabled={!toCheck}
-                      minDate={fromDate}
+                      disabled={filter.to.disabled}
+                      minDate={filter.from.date}
                     />
                   </div>
                 </div>
                 <div className={classes.popoverSearchButton} >
                   <Button
-                    disabled={!checked}
+                    disabled={filter.from.disabled}
                     variant="contained" 
                     color='primary'
+                    onClick={closeFilter}
                   >
                     検索
                   </Button>

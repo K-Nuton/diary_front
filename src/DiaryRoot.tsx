@@ -1,10 +1,9 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import PrimarySearchAppBar from './components/SearchBar';
-import DiaryDrawer from './components/Drawer';
-import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 
 const useStyles = makeStyles((theme: Theme) => 
   createStyles({
@@ -19,27 +18,36 @@ const useStyles = makeStyles((theme: Theme) =>
 const DiaryRoot: React.FC = () => {
   const classes = useStyles();
 
-  const [isOpen, drawerCloseHandler] = useState(false);
-  const onClose = useCallback(() => drawerCloseHandler(false), []);
-  const handleSearchBarClick = useCallback(() => drawerCloseHandler(true), []);
+  const [searchInput, setSearchInput] = useState('');
+  const [fromDate, setFromDate] = useState<Date>(new Date());
+  const [toDate, setToDate] = useState<Date>(new Date());
+  const [fromDisabled, setFromActive] = useState(true);
+  const [toDisabled, setToActive] = useState(true);
 
-  const [fromDate, setFromDate] = useState(new Date());
-  const handleFromChange = useCallback((date: MaterialUiPickersDate) => setFromDate(date as Date), []);
+  const onEnter = (input: string) => {
+    setSearchInput(input);
+    console.log(input, fromDate, toDate)
+  }
 
-  const [toDate, setToDate] = useState(new Date());
-  const handleToChange = useCallback((date: MaterialUiPickersDate) => setToDate(date as Date), []);
+  const filter = {
+    from: {
+      date: fromDate,
+      onChange: (date: MaterialUiPickersDate) => setFromDate(date as Date),
+      onDisabled: (disabled: boolean) => setFromActive(disabled),
+      disabled: fromDisabled
+    },
+    to: {
+      date: toDate,
+      onChange: (date: MaterialUiPickersDate) => setToDate(date ? date as Date : new Date()),
+      onDisabled: (disabled: boolean) => setToActive(disabled),
+      disabled: toDisabled
+    },
+    onClick: () => console.log(fromDate, toDate)
+  }
   
   return (  
     <>
-      <PrimarySearchAppBar sideOnClick={handleSearchBarClick}/>
-      <DiaryDrawer 
-        isOpen={isOpen} 
-        onClose={onClose}
-        from={fromDate}
-        to={toDate}
-        fromChange={handleFromChange} 
-        toChange={handleToChange}
-      />
+      <PrimarySearchAppBar onEnter={onEnter} filter={filter} />
       <DiaryList />
       <Fab color='primary' aria-label='add' className={classes.addIcon}>
         <AddIcon />
