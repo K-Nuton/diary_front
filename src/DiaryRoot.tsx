@@ -6,6 +6,17 @@ import AddIcon from '@material-ui/icons/Add';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import { Diary, RawDiary } from './model/Diary';
 import DiaryModal from './components/DiaryModal';
+import DiaryBody from './model/DiaryBody';
+
+const useStyles = makeStyles((theme: Theme) => 
+  createStyles({
+    addIcon: {
+      position: 'fixed',
+      right: '3%',
+      bottom: '10%'
+    }
+  })
+);
 
 function createRow({ 
   inner_user_id,
@@ -27,15 +38,26 @@ function createRow({
   };
 }
 
-const useStyles = makeStyles((theme: Theme) => 
-  createStyles({
-    addIcon: {
-      position: 'fixed',
-      right: '3%',
-      bottom: '10%'
+async function search(body: DiaryBody): Promise<Diary[]> {
+  const res = await fetch(
+    '../web_diary/search',
+    {
+      method: 'POST',
+      headers: {
+        'Accept': "application/json, text/plain, */*",
+        'Content-Type': 'application/json'
+      },
+      body: body.toString()
     }
-  })
-)
+  );
+
+  const json = await res.json();
+  if (json.error) throw new Error(json.error.message);
+
+  const raws: RawDiary[] = json.diaries;
+
+  return raws.map(createRow);
+}
 
 const DiaryRoot: React.FC = () => {
   const classes = useStyles();
@@ -46,6 +68,25 @@ const DiaryRoot: React.FC = () => {
   const [fromDisabled, setFromActive] = useState(true);
   const [toDisabled, setToActive] = useState(true);
   const [edit, setEdit] = useState(false);
+
+  // 検索用
+  useEffect(() => {
+    const body = new DiaryBody(
+      1000,
+      searchInput || null,
+      fromDisabled ? null : fromDate,
+      fromDisabled||toDisabled ? null : toDate
+    );
+
+    (async () => {
+      try {
+        const diaries = await search(body);
+        setDiaries(diaries);
+      } catch(e) {
+        setDiaries([]);
+      }
+    })();
+  }, [searchInput, fromDate, toDate]);
 
   const onEnter = (input: string) => {
     setSearchInput(input);
@@ -65,7 +106,7 @@ const DiaryRoot: React.FC = () => {
       onDisabled: (disabled: boolean) => setToActive(disabled),
       disabled: toDisabled
     },
-    onClick: () => console.log(fromDate, toDate)
+    onClick: () => void(0)
   }
 
   const [diaries, setDiaries] = useState<Diary[]>([]);
@@ -81,12 +122,19 @@ const DiaryRoot: React.FC = () => {
     setOpen(true);
   };
 
+  // 初期表示
   useEffect(
     () => {
+      const today = new Date();
+      const past = new Date(today.getFullYear(), today.getMonth()-1, today.getDate());
+      const body = new DiaryBody(1000, null, past, today);
       (async () => {
-        const res = await fetch('../1000.json');
-        const rawDiaries: RawDiary[] = (await res.json()).diaries;
-        setDiaries(rawDiaries.map(createRow))
+        try {
+          const diaries = await search(body);
+          setDiaries(diaries);
+        } catch(e) {
+          setDiaries([]);
+        }
       })();
     }, 
     []
@@ -107,7 +155,7 @@ const DiaryRoot: React.FC = () => {
       },
       onDelete: () => setOpen(false),
       onCancel: () => setOpen(false)
-    } as const;
+    };
 
     setEdit(true);
     setTarget(emptyDiary);
