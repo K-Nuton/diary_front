@@ -7,11 +7,11 @@ import Typography from '@material-ui/core/Typography';
 import InputBase from '@material-ui/core/InputBase';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-import MenuIcon from '@material-ui/icons/Menu';
+import ImportContactsIcon from '@material-ui/icons/ImportContacts';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import FilterListIcon from '@material-ui/icons/FilterList';
-import { Button, FormControlLabel, Popover, Switch } from '@material-ui/core';
+import { FormControlLabel, Popover, Switch } from '@material-ui/core';
 import { DatePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 
@@ -93,10 +93,186 @@ type PrimarySearchAppBar = {
   filter: {
     from: DateSwitch,
     to: DateSwitch,
-    onClick: () => void;
   }
 };
 export default function PrimarySearchAppBar({ onEnter, filter }: PrimarySearchAppBar) {
+  const classes = useStyles();
+
+  const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);
+  const filterOpen = Boolean(filterAnchor);
+  const filterId = filterOpen ? 'filter-popover' : undefined;
+  
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setFilterAnchor(event.currentTarget);
+  };
+
+  const handleFilterClose = () => setFilterAnchor(null);
+
+  const handleInputEnter = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if ('Enter' === event.key)
+      onEnter((event.target as HTMLTextAreaElement).value);
+  };
+  
+  return (
+    <div className={classes.grow}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            className={classes.menuButton}
+            color="inherit"
+            aria-label="open drawer"
+          >
+            <ImportContactsIcon />
+          </IconButton>
+          <Typography className={classes.title} variant="h6" noWrap>
+            Web Diary
+          </Typography>
+          <div className={classes.search}>
+            <SearchTextField 
+              filterId={filterId}
+              filterEnabled={!filter.from.disabled}
+              onKeyPress={handleInputEnter}
+              onFilterClick={handleFilterClick}
+            />
+            <DateRangeSwitcher 
+              from={filter.from}
+              to={filter.to}
+              open={filterOpen}
+              filterAnchor={filterAnchor}
+              onClose={handleFilterClose}
+              id={filterId}
+            />
+          </div>
+          <UserMenu />
+        </Toolbar>
+      </AppBar>
+    </div>
+  );
+}
+
+type SearchTextField = {
+  onKeyPress: ((event: React.KeyboardEvent<HTMLDivElement>) => void) | undefined;
+  onFilterClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  filterId: string | undefined;
+  filterEnabled: boolean;
+}
+function SearchTextField({ onKeyPress, onFilterClick, filterId, filterEnabled }: SearchTextField): JSX.Element {
+  const classes = useStyles();
+  return (
+    <>
+      <div className={classes.searchIcon}>
+        <SearchIcon />
+      </div>
+      <InputBase
+        placeholder="Search…"
+        onKeyPress={onKeyPress}
+        classes={{
+        root: classes.inputRoot,
+        input: classes.inputInput,
+        }}
+        inputProps={{ 'aria-label': 'search' }}
+      />
+      <IconButton 
+        className={classes.filterIcon}
+        aria-label="date-filter"
+        aria-controls={filterId}
+        aria-haspopup="true"
+        color={filterEnabled ? 'secondary' : 'inherit'}
+        onClick={onFilterClick}
+      >
+      <FilterListIcon />
+      </IconButton>
+    </>
+  );
+}
+
+type Switcher = {
+  from: DateSwitch;
+  to: DateSwitch;
+  open: boolean;
+  filterAnchor: HTMLButtonElement | null;
+  onClose: () => any;
+  id: string | undefined;
+};
+function DateRangeSwitcher({ from, to, open, filterAnchor, onClose, id }: Switcher): JSX.Element {
+  const classes = useStyles();
+
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    from.onDisabled(!event.target.checked);
+    if (!event.target.checked)
+      to.onDisabled(!event.target.checked);
+  };
+
+  const handleToSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    to.onDisabled(!event.target.checked);
+  };
+
+  return (
+    <Popover
+      id={id}
+      open={open}
+      anchorEl={filterAnchor}
+      onClose={onClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'center'
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'center'
+      }}
+    >
+      <div className={classes.popover}>
+        <FormControlLabel 
+          control={
+            <Switch
+              checked={!from.disabled}
+              onChange={handleSwitchChange}
+              color='primary'
+              name='switch date filter'
+              inputProps={{ 'aria-label': 'enable date filter' }}
+            />
+          }
+          label="enable date filter"
+        />
+        <div>
+          <DatePicker 
+            disabled={from.disabled}
+            label="from"
+            variant='inline'
+            value={from.date}
+            onChange={from.onChange}
+            format='yyyy/MM/dd'
+            disableFuture
+          />
+          <div>
+            <Switch
+              disabled={from.disabled}
+              checked={!to.disabled}
+              onChange={handleToSwitchChange}
+              color="primary"
+              name="switch to date"
+              inputProps={{ 'aria-label': 'to date checkbox' }}
+            />
+            <DatePicker 
+              label="to"
+              variant='inline'
+              value={to.date}
+              onChange={to.onChange}
+              format='yyyy/MM/dd'
+              disableFuture
+              disabled={to.disabled}
+              minDate={from.date}
+            />
+          </div>
+        </div>
+      </div>
+    </Popover>
+  );
+}
+
+function UserMenu(): JSX.Element {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -111,175 +287,31 @@ export default function PrimarySearchAppBar({ onEnter, filter }: PrimarySearchAp
   };
 
   const menuId = 'primary-search-account-menu';
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      id={menuId}
-      keepMounted
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleMenuClose}>Your Name</MenuItem>
-      <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
-    </Menu>
-  );
-
-  const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);
-  
-  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setFilterAnchor(event.currentTarget);
-  };
-
-  const closeFilter = () => {
-    filter.onClick();
-    setFilterAnchor(null);
-  };
-
-  const handleFilterClose = () => setFilterAnchor(null);
-
-  const filterOpen = Boolean(filterAnchor);
-  const filterId = filterOpen ? 'filter-popover' : undefined;
-
-  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    filter.from.onDisabled(!event.target.checked);
-    if (!event.target.checked)
-      filter.to.onDisabled(!event.target.checked);
-  };
-
-  const handleToSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    filter.to.onDisabled(!event.target.checked);
-  };
-
-  const handleInputEnter = (event: React.KeyboardEvent<HTMLDivElement>): void => {
-    if ('Enter' === event.key)
-      onEnter((event.target as HTMLTextAreaElement).value);
-  };
-
 
   return (
-    <div className={classes.grow}>
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography className={classes.title} variant="h6" noWrap>
-            Web Diary
-          </Typography>
-          <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <InputBase
-              placeholder="Search…"
-              onKeyPress={handleInputEnter}
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-            />
-            <IconButton 
-              className={classes.filterIcon}
-              aria-label="date-filter"
-              aria-controls={filterId}
-              aria-haspopup="true"
-              color={!filter.from.disabled ? 'secondary' : 'inherit'}
-              onClick={handleFilterClick}
-            >
-              <FilterListIcon />
-            </IconButton>
-            <Popover
-              id={filterId}
-              open={filterOpen}
-              anchorEl={filterAnchor}
-              onClose={handleFilterClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center'
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center'
-              }}
-            >
-              <div className={classes.popover}>
-                <FormControlLabel 
-                  control={
-                    <Switch
-                      checked={!filter.from.disabled}
-                      onChange={handleSwitchChange}
-                      color='primary'
-                      name='switch date filter'
-                      inputProps={{ 'aria-label': 'enable date filter' }}
-                    />
-                  }
-                  label="enable date filter"
-                />
-                <div>
-                  <DatePicker 
-                    disabled={filter.from.disabled}
-                    label="from"
-                    variant='inline'
-                    value={filter.from.date}
-                    onChange={filter.from.onChange}
-                    format='yyyy/MM/dd'
-                    disableFuture
-                  />
-                  <div>
-                    <Switch
-                      disabled={filter.from.disabled}
-                      checked={!filter.to.disabled}
-                      onChange={handleToSwitchChange}
-                      color="primary"
-                      name="switch to date"
-                      inputProps={{ 'aria-label': 'to date checkbox' }}
-                    />
-                    <DatePicker 
-                      label="to"
-                      variant='inline'
-                      value={filter.to.date}
-                      onChange={filter.to.onChange}
-                      format='yyyy/MM/dd'
-                      disableFuture
-                      disabled={filter.to.disabled}
-                      minDate={filter.from.date}
-                    />
-                  </div>
-                </div>
-                <div className={classes.popoverSearchButton} >
-                  <Button
-                    disabled={filter.from.disabled}
-                    variant="contained" 
-                    color='primary'
-                    onClick={closeFilter}
-                  >
-                    検索
-                  </Button>
-                </div>
-              </div>
-            </Popover>
-          </div>
-          <div className={classes.grow} />
-            <IconButton
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-        </Toolbar>
-      </AppBar>
-      {renderMenu}
-    </div>
-  );
+    <>
+      <div className={classes.grow} />
+        <IconButton
+          aria-label="account of current user"
+          aria-controls={menuId}
+          aria-haspopup="true"
+          onClick={handleProfileMenuOpen}
+          color="inherit"
+        >
+          <AccountCircle />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          id={menuId}
+          keepMounted
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={isMenuOpen}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleMenuClose}>Your Name</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+        </Menu>
+    </>
+  )
 }

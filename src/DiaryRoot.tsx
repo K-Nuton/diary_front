@@ -69,25 +69,6 @@ const DiaryRoot: React.FC = () => {
   const [toDisabled, setToActive] = useState(true);
   const [edit, setEdit] = useState(false);
 
-  // 検索用
-  useEffect(() => {
-    const body = new DiaryBody(
-      1000,
-      searchInput || null,
-      fromDisabled ? null : fromDate,
-      fromDisabled||toDisabled ? null : toDate
-    );
-
-    (async () => {
-      try {
-        const diaries = await search(body);
-        setDiaries(diaries);
-      } catch(e) {
-        setDiaries([]);
-      }
-    })();
-  }, [searchInput, fromDate, toDate]);
-
   const onEnter = (input: string) => {
     setSearchInput(input);
     console.log(input, fromDate, toDate)
@@ -105,8 +86,7 @@ const DiaryRoot: React.FC = () => {
       onChange: (date: MaterialUiPickersDate) => setToDate(date as Date),
       onDisabled: (disabled: boolean) => setToActive(disabled),
       disabled: toDisabled
-    },
-    onClick: () => void(0)
+    }
   }
 
   const [diaries, setDiaries] = useState<Diary[]>([]);
@@ -138,6 +118,28 @@ const DiaryRoot: React.FC = () => {
       })();
     }, 
     []
+  );
+
+  // 検索用
+  useEffect(
+    () => {
+      const body = new DiaryBody(
+        1000,
+        searchInput || null,
+        fromDisabled ? null : fromDate,
+        fromDisabled||toDisabled ? null : toDate
+      );
+  
+      (async () => {
+        try {
+          const diaries = await search(body);
+          setDiaries(diaries);
+        } catch(e) {
+          setDiaries([]);
+        }
+      })();
+    }, 
+    [searchInput, fromDate, toDate, fromDisabled, toDisabled]
   );
 
   const [open, setOpen] = useState(false);
