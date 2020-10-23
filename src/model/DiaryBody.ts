@@ -1,3 +1,4 @@
+import encodeDate from '../utils/TimeUtils';
 
 export default class DiaryBody {
   private inner_user_id: number;
@@ -12,33 +13,38 @@ export default class DiaryBody {
     this.toDate = toDate;
   }
 
+  private get isEmpty(): boolean {
+    if (this.text) return false;
+    if (this.fromDate) return false;
+    return true;
+  }
+
   public toString(): string {
     const result: any = {
       inner_user_id: this.inner_user_id
     }
+
+    if (this.isEmpty) {
+      result.text = '_%_';
+      return JSON.stringify(result);
+    }
+
     this.text ? result.text = this.text : void(0);
     
     if (this.fromDate) {
-      result.date = this.encodeDate(this.fromDate, false);
-      result.end_date = this.encodeDate((this.toDate || this.fromDate), true);
+      result.date = encodeDate(this.fixDate(this.fromDate, true));
+      result.end_date = encodeDate(this.fixDate((this.toDate || this.fromDate), false))
     }
 
     return JSON.stringify(result);
   }
 
-  private encodeDate(date: Date, to: boolean): string {
-    date.setHours(to ? 23 : 0);
-    date.setMinutes(to ? 59 : 0);
-    date.setSeconds(to ? 59 : 0);
+  private fixDate(date: Date, begin: boolean): Date {
+    date.setHours(begin ? 0 : 23);
+    date.setMinutes(begin ? 0 : 59);
+    date.setSeconds(begin ? 0 : 59);
 
-    return (
-      date.getFullYear() + '-' + 
-        this.zeroPadding(date.getMonth() + 1) + '-' + 
-        this.zeroPadding(date.getDate()) + 'T' +
-        this.zeroPadding(date.getHours()) + ':' +
-        this.zeroPadding(date.getMinutes()) + ':' +
-        this.zeroPadding(date.getSeconds()) + '.0'
-    );
+    return date;
   }
 
   private zeroPadding(num: number): string {

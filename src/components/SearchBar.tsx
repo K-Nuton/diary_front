@@ -95,7 +95,7 @@ type PrimarySearchAppBar = {
     to: DateSwitch,
   }
 };
-export default function PrimarySearchAppBar({ onEnter, filter }: PrimarySearchAppBar) {
+export default function SearchBar({ onEnter, filter }: PrimarySearchAppBar) {
   const classes = useStyles();
 
   const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);

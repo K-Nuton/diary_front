@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import PrimarySearchAppBar from './components/SearchBar';
+import SearchBar from './components/SearchBar';
 import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
@@ -62,16 +62,27 @@ const DiaryRoot: React.FC = () => {
   const classes = useStyles();
 
   const [searchInput, setSearchInput] = useState('');
-  const [fromDate, setFromDate] = useState<Date>(new Date());
+
   const [toDate, setToDate] = useState<Date>(new Date());
-  const [fromDisabled, setFromActive] = useState(true);
-  const [toDisabled, setToActive] = useState(true);
+  const [fromDate, setFromDate] = useState<Date>(
+    new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate())
+  );
+
+  const [fromDisabled, setFromActive] = useState(false);
+  const [toDisabled, setToActive] = useState(false);
+
+  const [diaries, setDiaries] = useState<Diary[]>([]);
+  const [target, setTarget] = useState<Diary | null>(null);
+
+  const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState(false);
 
-  const onEnter = (input: string) => {
+  const [resetPage, setResetPage] = useState(false);
+
+  const onEnter = useCallback((input: string) => {
     setSearchInput(input);
     console.log(input, fromDate, toDate)
-  }
+  }, [fromDate, toDate]);
 
   const filter = {
     from: {
@@ -88,66 +99,50 @@ const DiaryRoot: React.FC = () => {
     }
   }
 
-  const [diaries, setDiaries] = useState<Diary[]>([]);
-  const [target, setTarget] = useState<Diary | null>(null);
-  const onSelected = (target: Diary) => {
+  const onSelected = useCallback((target: Diary) => {
     setEdit(false);
     target.onSave = ({ date, wheather, feeling, text }: Diary) => {
       console.log(date, wheather, feeling, text);
+      return false;
     };
 
-    target.onDelete = () => alert('本当に削除していいですか?');
+    target.onDelete = () => {
+      alert('本当に削除していいですか?');
+      return false;
+    };
     setTarget(target);
     setOpen(true);
-  };
+  }, []);
 
-  // 初期表示
-  useEffect(
-    () => {
-      setResetPage(true);
-      const today = new Date();
-      const past = new Date(today.getFullYear(), today.getMonth()-1, today.getDate());
-      const body = new DiaryBody(1000, null, past, today);
-      (async () => {
-        try {
-          const diaries = await search(body);
-          setDiaries(diaries);
-        } catch(e) {
-          setDiaries([]);
-        } 
-      })();
-    }, 
-    []
-  );
+  const searchBody = useCallback(async (body: DiaryBody) => {
+    setResetPage(true);
+
+    try {
+      const diaries = await search(body);
+      setDiaries(diaries);
+    } catch (e) {
+      setDiaries([]);
+    } finally {
+      setResetPage(false);
+    }
+  }, []);
 
   // 検索用
   useEffect(
     () => {
-      setResetPage(true);
-      
       const body = new DiaryBody(
         1000,
         searchInput || null,
         fromDisabled ? null : fromDate,
-        fromDisabled||toDisabled ? null : toDate
+        fromDisabled || toDisabled ? null : toDate
       );
   
-      (async () => {
-        try {
-          const diaries = await search(body);
-          setDiaries(diaries);
-        } catch(e) {
-          setDiaries([]);
-        } finally {
-          setResetPage(false);
-        }
-      })();
+      searchBody(body);
     }, 
-    [searchInput, fromDate, toDate, fromDisabled, toDisabled]
+    [searchInput, fromDate, toDate, fromDisabled, toDisabled, searchBody]
   );
 
-  const [open, setOpen] = useState(false);
-  const handleModalClose = () => setOpen(false);
+  const handleModalClose = useCallback(() => setOpen(false), []);
 
   const createNew = useCallback(() => {
     const emptyDiary: Diary = {
@@ -167,14 +162,25 @@ const DiaryRoot: React.FC = () => {
     setTarget(emptyDiary);
     setOpen(true);
   }, []);
-
-  const [resetPage, setResetPage] = useState(false);
   
   return (  
     <>
-      <PrimarySearchAppBar onEnter={onEnter} filter={filter} />
-      <DiaryList diaries={diaries} onSelected={onSelected} pageReset={resetPage} />
-      <DiaryModal diary={target} open={open} edit={edit} toggleEdit={setEdit} onClose={handleModalClose}/>
+      <SearchBar 
+        onEnter={onEnter} 
+        filter={filter} 
+      />
+      <DiaryList 
+        diaries={diaries} 
+        onSelected={onSelected} 
+        pageReset={resetPage} 
+      />
+      <DiaryModal 
+        diary={target} 
+        open={open} 
+        edit={edit} 
+        toggleEdit={setEdit} 
+        onClose={handleModalClose}
+      />
       <Fab 
         color='primary' 
         aria-label='add' 
