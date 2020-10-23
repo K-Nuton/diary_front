@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState, useCallback } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
@@ -49,10 +49,10 @@ const useStyles = makeStyles({
 
 type DiaryList = {
   diaries: Diary[];
-  target: Diary | null;
   onSelected: (target: Diary) => void;
+  pageReset: boolean;
 };
-export default function DiaryList({ diaries, target, onSelected }: DiaryList) {
+export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList) {
   const classes = useStyles();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -65,6 +65,10 @@ export default function DiaryList({ diaries, target, onSelected }: DiaryList) {
     setRowsPerPage(+event.target.value);
     setPage(0);
   }, []);
+
+  useEffect(() => {
+    pageReset ? setPage(0) : void(0);
+  }, [pageReset]);
 
   return (
     <Paper className={classes.root}>
@@ -92,9 +96,7 @@ export default function DiaryList({ diaries, target, onSelected }: DiaryList) {
                   hover 
                   role="checkbox" 
                   tabIndex={-1}
-                  onClick={(event) => {
-                    onSelected(diary);
-                  }}
+                  onClick={(event) => onSelected(diary)}
                 >
                   {columns.map((column) => {
                     const value = diary[column.id];

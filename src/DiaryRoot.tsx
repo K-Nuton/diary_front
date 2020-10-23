@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PrimarySearchAppBar from './components/SearchBar';
 import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
@@ -44,7 +44,6 @@ async function search(body: DiaryBody): Promise<Diary[]> {
     {
       method: 'POST',
       headers: {
-        'Accept': "application/json, text/plain, */*",
         'Content-Type': 'application/json'
       },
       body: body.toString()
@@ -105,6 +104,7 @@ const DiaryRoot: React.FC = () => {
   // 初期表示
   useEffect(
     () => {
+      setResetPage(true);
       const today = new Date();
       const past = new Date(today.getFullYear(), today.getMonth()-1, today.getDate());
       const body = new DiaryBody(1000, null, past, today);
@@ -114,7 +114,7 @@ const DiaryRoot: React.FC = () => {
           setDiaries(diaries);
         } catch(e) {
           setDiaries([]);
-        }
+        } 
       })();
     }, 
     []
@@ -123,6 +123,8 @@ const DiaryRoot: React.FC = () => {
   // 検索用
   useEffect(
     () => {
+      setResetPage(true);
+      
       const body = new DiaryBody(
         1000,
         searchInput || null,
@@ -136,6 +138,8 @@ const DiaryRoot: React.FC = () => {
           setDiaries(diaries);
         } catch(e) {
           setDiaries([]);
+        } finally {
+          setResetPage(false);
         }
       })();
     }, 
@@ -145,7 +149,7 @@ const DiaryRoot: React.FC = () => {
   const [open, setOpen] = useState(false);
   const handleModalClose = () => setOpen(false);
 
-  const createNew = () => {
+  const createNew = useCallback(() => {
     const emptyDiary: Diary = {
       inner_user_id: 1000, // ここにログインで取得したものを設定する.
       date: new Date(),
@@ -162,12 +166,14 @@ const DiaryRoot: React.FC = () => {
     setEdit(true);
     setTarget(emptyDiary);
     setOpen(true);
-  }
+  }, []);
+
+  const [resetPage, setResetPage] = useState(false);
   
   return (  
     <>
       <PrimarySearchAppBar onEnter={onEnter} filter={filter} />
-      <DiaryList diaries={diaries} target={target} onSelected={onSelected}/>
+      <DiaryList diaries={diaries} onSelected={onSelected} pageReset={resetPage} />
       <DiaryModal diary={target} open={open} edit={edit} toggleEdit={setEdit} onClose={handleModalClose}/>
       <Fab 
         color='primary' 
