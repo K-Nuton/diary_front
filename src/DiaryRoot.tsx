@@ -119,7 +119,7 @@ const DiaryRoot: React.FC = () => {
 
     try {
       const diaries = await search(body);
-      setDiaries(diaries);
+      setDiaries(diaries.reverse());
     } catch (e) {
       setDiaries([]);
     } finally {
