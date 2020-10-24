@@ -166,14 +166,32 @@ export function EditBody({diary, onClose}: EditBody) {
     setFeeling(event.target.value as number);
   };
 
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
   const textRef =  useRef<HTMLTextAreaElement>(null);;
   const handleOnSave = () => {
     const text = textRef.current ? textRef.current.value : '';
-    diary.onSave ? diary.onSave({ date, wheather, feeling, text }) : void(0)
+    if (!diary.onSave) return;
+
+    setButtonDisabled(true);
+    diary.onSave({ date, wheather, feeling, text})
+      .then(() => setButtonDisabled(false));
   };
 
   const handleOnDelete = () => {
-    diary.onDelete ? diary.onDelete() : void(0);
+    if (!diary.onDelete) return;
+
+    setButtonDisabled(true);
+    diary.onDelete()
+      .then(() => setButtonDisabled(false));
+  };
+
+  const handleOnClose = () => {
+    if (!diary.onCancel) return;
+
+    setButtonDisabled(true);
+    diary.onCancel()
+      .then(() => setButtonDisabled(false));
   };
 
   return (
@@ -244,8 +262,12 @@ export function EditBody({diary, onClose}: EditBody) {
         inputProps={{ 'aria-label': 'naked' }}
       />
       <div className={classes.editButtonWrapper}>
-        <div className={classes.delete} onClick={handleOnDelete}>
-          <IconButton aria-label="delete">
+        <div className={classes.delete}>
+          <IconButton
+            onClick={handleOnDelete}
+            disabled={buttonDisabled} 
+            aria-label="delete"
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </div>
@@ -260,7 +282,10 @@ export function EditBody({diary, onClose}: EditBody) {
             <NavigationIcon />
             保存
           </Fab>
-          <IconButton aria-label='close' onClick={onClose}>
+          <IconButton 
+            aria-label='close' 
+            onClick={handleOnClose}
+          >
             <CloseIcon fontSize='small'/>
           </IconButton>
         </div>

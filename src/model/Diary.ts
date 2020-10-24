@@ -16,9 +16,9 @@ export type Diary = {
   wheather: number;
   feeling: number;
   text: string;
-  onSave?: (diary: Diary) => void;
-  onDelete?: () => void;
-  onCancel?: () => void;
+  onSave?: (diary: Diary) => Promise<any>;
+  onDelete?: () => Promise<any>;
+  onCancel?: () => Promise<any>;
 };
 
 const Wheather = {

@@ -7,6 +7,7 @@ import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import { Diary, RawDiary } from './model/Diary';
 import DiaryModal from './components/DiaryModal';
 import DiaryBody from './model/DiaryBody';
+import encodeDate from './utils/TimeUtils';
 
 const useStyles = makeStyles((theme: Theme) => 
   createStyles({
@@ -101,15 +102,93 @@ const DiaryRoot: React.FC = () => {
 
   const onSelected = useCallback((target: Diary) => {
     setEdit(false);
-    target.onSave = ({ date, wheather, feeling, text }: Diary) => {
-      console.log(date, wheather, feeling, text);
-      return false;
+    target.onSave = async ({ date, wheather, feeling, text }: Diary) => {
+      const uDate = target.date.getTime() === date.getTime() ? null : date;
+      const uWheather = target.wheather === wheather ? null : wheather;
+      const uFeeling = target.feeling === feeling ? null : feeling;
+      const uText = target.text === text ? null : text;
+
+      if (!target.diary_id) return;
+      if (!(uDate || uWheather || uFeeling || uText)) {
+        alert('更新する変更がありません');
+        return;
+      }
+
+      if (text.length < 10) {
+        alert('本文は10文字以上入力してください');
+        return;
+      }
+
+      const result = window.confirm('更新します');
+      if (!result) return;
+
+      const body = {
+        diary_id: target.diary_id,
+        date: uDate ? encodeDate(date) : null,
+        wheather: uWheather,
+        feeling: uFeeling,
+        text: uText
+      }
+      
+      try {
+        const res = await fetch(
+          '../web_diary/diary',
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body, (_, v) => v || undefined)
+          }
+        );
+        const json = await res.json();
+
+        if (json.error) {
+          alert(`更新できませんでした。 詳細: ${json.error.message}`);
+        }
+      } catch(e) {
+        alert(`更新できませんでした。 詳細: ${e.message}`);
+      } finally {
+        setFromActive(false);
+        setToActive(true);
+        setFromDate(date);
+        setToDate(date);
+        setOpen(false);
+      }
+      
     };
 
-    target.onDelete = () => {
-      alert('本当に削除していいですか?');
-      return false;
+    target.onDelete = async () => {
+      const result = window.confirm('本当に削除していいですか?');
+      if (!result) return;
+
+      try {
+        const res = await fetch(
+          `../web_diary/diary/${target.diary_id}`,
+          { method: 'DELETE' }
+        );
+
+        const status = res.status;
+        if (status !== 204) {
+          alert(`削除できませんでした。 詳細: ${status}`);
+          return;
+        }
+
+        setFromActive(false);
+        setToActive(false);
+        setToDate(new Date());
+        setFromDate(new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate()));
+        setOpen(false);
+      } catch(e) {
+        alert(`削除できませんでした。 詳細: ${e.message}`);
+      }
     };
+
+    target.onCancel = async () => {
+      const result = window.confirm('変更を破棄します');
+      if (!result) return;
+      setOpen(false);
+    }
     setTarget(target);
     setOpen(true);
   }, []);
@@ -151,11 +230,62 @@ const DiaryRoot: React.FC = () => {
       wheather: 0,
       feeling: 0,
       text: '',
-      onSave: ({ date, wheather, feeling, text }: Diary) => {
-        console.log(date, wheather, feeling, text)
+      onSave: async ({ date, wheather, feeling, text }: Diary) => {
+        if (text.length < 10) {
+          alert('本文は10文字以上入力してください');
+          return;
+        }
+
+        const body = {
+          inner_user_id: 1000,
+          date: encodeDate(date),
+          wheather: wheather,
+          feeling: feeling,
+          text: text
+        };
+
+        const result = window.confirm('以下の内容で作成します。');
+        if (!result) return;
+
+        try {
+          const res = await fetch(
+            '../web_diary/diary',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(body)
+            }
+          );
+  
+          const json = await res.json();
+
+          if (json.error) {
+            alert(`作成できませんでした。 詳細: ${json.error.message}`);
+          }
+        } catch(e) {
+          alert(`作成できませんでした。 詳細: ${e.message}`);
+        } finally {
+          setFromActive(false);
+          setToActive(true);
+          setFromDate(date);
+          setToDate(date);
+          setOpen(false);
+        }
       },
-      onDelete: () => setOpen(false),
-      onCancel: () => setOpen(false)
+      onDelete: async () => {
+        const result = window.confirm('入力を破棄してもよろしいですか?');
+        if (!result) return;
+
+        setOpen(false)
+      },
+      onCancel: async () => {
+        const result = window.confirm('入力を破棄してもよろしいですか?');
+        if (!result) return;
+        
+        setOpen(false)
+      },
     };
 
     setEdit(true);
