@@ -32,20 +32,21 @@ function App() {
 
   const onLogout = useCallback(() => setInnerUserId(null), []);
 
-  const display = innerUserId ? (
-    <MuiPickersUtilsProvider utils={DateFnsUtils} locale={jaLocale}>
-      <DiaryRoot 
-        innerUserId={innerUserId} 
-        userInfo={{
-          userName: userName || '',
-          onLogout: onLogout
-        }}
-      />
-    </MuiPickersUtilsProvider>
-  ) : <Login onLogin={onLogin} />
   return (
     <>
-      {display}
+      {innerUserId ? (
+        <MuiPickersUtilsProvider utils={DateFnsUtils} locale={jaLocale}>
+          <DiaryRoot 
+            innerUserId={innerUserId} 
+            userInfo={{
+              userName: userName || '',
+              onLogout: onLogout
+            }}
+          />
+        </MuiPickersUtilsProvider>
+      ):(
+        <Login onLogin={onLogin} />
+      )}
     </>
   );
 }
