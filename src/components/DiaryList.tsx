@@ -55,7 +55,7 @@ type DiaryList = {
 export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList) {
   const classes = useStyles();
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   const handleChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
