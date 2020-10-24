@@ -93,9 +93,13 @@ type PrimarySearchAppBar = {
   filter: {
     from: DateSwitch,
     to: DateSwitch,
+  },
+  userInfo: {
+    userName: string;
+    onLogout: () => void;
   }
 };
-export default function SearchBar({ onEnter, filter }: PrimarySearchAppBar) {
+export default function SearchBar({ onEnter, filter, userInfo }: PrimarySearchAppBar) {
   const classes = useStyles();
 
   const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);
@@ -144,7 +148,7 @@ export default function SearchBar({ onEnter, filter }: PrimarySearchAppBar) {
               id={filterId}
             />
           </div>
-          <UserMenu />
+          <UserMenu userName={userInfo.userName} onLogout={userInfo.onLogout} />
         </Toolbar>
       </AppBar>
     </div>
@@ -272,7 +276,11 @@ function DateRangeSwitcher({ from, to, open, filterAnchor, onClose, id }: Switch
   );
 }
 
-function UserMenu(): JSX.Element {
+type UserMenu = {
+  userName: string;
+  onLogout: () => void;
+}
+function UserMenu({ userName, onLogout }: UserMenu): JSX.Element {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -309,8 +317,8 @@ function UserMenu(): JSX.Element {
           open={isMenuOpen}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={handleMenuClose}>Your Name</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Logout</MenuItem>
+          <MenuItem onClick={handleMenuClose}>{userName}</MenuItem>
+          <MenuItem onClick={onLogout}>Logout</MenuItem>
         </Menu>
     </>
   )

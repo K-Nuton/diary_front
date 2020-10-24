@@ -168,7 +168,7 @@ export function EditBody({diary, onClose}: EditBody) {
 
   const [buttonDisabled, setButtonDisabled] = useState(false);
 
-  const textRef =  useRef<HTMLTextAreaElement>(null);;
+  const textRef =  useRef<HTMLTextAreaElement>(null);
   const handleOnSave = () => {
     const text = textRef.current ? textRef.current.value : '';
     if (!diary.onSave) return;

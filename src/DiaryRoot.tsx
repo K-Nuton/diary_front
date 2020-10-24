@@ -61,8 +61,12 @@ async function search(body: DiaryBody): Promise<Diary[]> {
 
 type DiaryRoot = {
   innerUserId: number;
+  userInfo: {
+    userName: string;
+    onLogout: () => void;
+  }
 };
-const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId }) => {
+const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const classes = useStyles();
 
   const [searchInput, setSearchInput] = useState('');
@@ -301,6 +305,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId }) => {
       <SearchBar 
         onEnter={onEnter} 
         filter={filter} 
+        userInfo={userInfo}
       />
       <DiaryList 
         diaries={diaries} 
