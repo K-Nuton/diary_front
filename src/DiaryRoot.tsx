@@ -191,7 +191,7 @@ const DiaryRoot: React.FC = () => {
     }
     setTarget(target);
     setOpen(true);
-  }, []);
+  }, [toDate]);
 
   const searchBody = useCallback(async (body: DiaryBody) => {
     setResetPage(true);
