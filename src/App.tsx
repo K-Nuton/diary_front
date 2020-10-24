@@ -4,12 +4,14 @@ import DateFnsUtils from '@date-io/date-fns';
 import jaLocale from 'date-fns/locale/ja'
 
 import DiaryRoot from './DiaryRoot';
+import Login from './Login';
 
 function App() {
   return (
-    <MuiPickersUtilsProvider utils={DateFnsUtils} locale={jaLocale}>
-      <DiaryRoot innerUserId={1000} />
-    </MuiPickersUtilsProvider>
+    <Login />
+    // <MuiPickersUtilsProvider utils={DateFnsUtils} locale={jaLocale}>
+    //   <DiaryRoot innerUserId={1000} />
+    // </MuiPickersUtilsProvider>
   );
 }
 
