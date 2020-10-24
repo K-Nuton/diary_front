@@ -76,8 +76,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate())
   );
 
-  const [fromDisabled, setFromActive] = useState(false);
-  const [toDisabled, setToActive] = useState(false);
+  const [fromDisabled, setFromDisabled] = useState(false);
+  const [toDisabled, setToDisabled] = useState(false);
 
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [target, setTarget] = useState<Diary | null>(null);
@@ -96,13 +96,13 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     from: {
       date: fromDate,
       onChange: (date: MaterialUiPickersDate) => setFromDate(date as Date),
-      onDisabled: (disabled: boolean) => setFromActive(disabled),
+      onDisabled: (disabled: boolean) => setFromDisabled(disabled),
       disabled: fromDisabled
     },
     to: {
       date: toDate,
       onChange: (date: MaterialUiPickersDate) => setToDate(date as Date),
-      onDisabled: (disabled: boolean) => setToActive(disabled),
+      onDisabled: (disabled: boolean) => setToDisabled(disabled),
       disabled: toDisabled
     }
   }
@@ -156,8 +156,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       } catch(e) {
         alert(`更新できませんでした。 詳細: ${e.message}`);
       } finally {
-        setFromActive(false);
-        setToActive(true);
+        setFromDisabled(false);
+        setToDisabled(true);
         setFromDate(date);
         setToDate(date);
         setOpen(false);
@@ -181,8 +181,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
           return;
         }
 
-        setFromActive(false);
-        setToActive(false);
+        setFromDisabled(false);
+        setToDisabled(false);
         setToDate(new Date());
         setFromDate(new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate()));
         setOpen(false);
@@ -274,8 +274,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         } catch(e) {
           alert(`作成できませんでした。 詳細: ${e.message}`);
         } finally {
-          setFromActive(false);
-          setToActive(true);
+          setFromDisabled(false);
+          setToDisabled(true);
           setFromDate(date);
           setToDate(date);
           setOpen(false);
