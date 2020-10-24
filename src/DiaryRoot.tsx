@@ -59,7 +59,10 @@ async function search(body: DiaryBody): Promise<Diary[]> {
   return raws.map(createRow);
 }
 
-const DiaryRoot: React.FC = () => {
+type DiaryRoot = {
+  innerUserId: number;
+};
+const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId }) => {
   const classes = useStyles();
 
   const [searchInput, setSearchInput] = useState('');
@@ -210,7 +213,7 @@ const DiaryRoot: React.FC = () => {
   useEffect(
     () => {
       const body = new DiaryBody(
-        1000,
+        innerUserId,
         searchInput || null,
         fromDisabled ? null : fromDate,
         fromDisabled || toDisabled ? null : toDate
@@ -218,14 +221,14 @@ const DiaryRoot: React.FC = () => {
   
       searchBody(body);
     }, 
-    [searchInput, fromDate, toDate, fromDisabled, toDisabled, searchBody]
+    [innerUserId, searchInput, fromDate, toDate, fromDisabled, toDisabled, searchBody]
   );
 
   const handleModalClose = useCallback(() => setOpen(false), []);
 
   const createNew = useCallback(() => {
     const emptyDiary: Diary = {
-      inner_user_id: 1000, // ここにログインで取得したものを設定する.
+      inner_user_id: innerUserId, // ここにログインで取得したものを設定する.
       date: new Date(),
       wheather: 0,
       feeling: 0,
@@ -237,7 +240,7 @@ const DiaryRoot: React.FC = () => {
         }
 
         const body = {
-          inner_user_id: 1000,
+          inner_user_id: innerUserId,
           date: encodeDate(date),
           wheather: wheather,
           feeling: feeling,
@@ -291,7 +294,7 @@ const DiaryRoot: React.FC = () => {
     setEdit(true);
     setTarget(emptyDiary);
     setOpen(true);
-  }, []);
+  }, [innerUserId]);
   
   return (  
     <>

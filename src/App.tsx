@@ -8,7 +8,7 @@ import DiaryRoot from './DiaryRoot';
 function App() {
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils} locale={jaLocale}>
-      <DiaryRoot />
+      <DiaryRoot innerUserId={1000} />
     </MuiPickersUtilsProvider>
   );
 }
