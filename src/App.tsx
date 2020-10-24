@@ -10,7 +10,7 @@ function App() {
   const [innerUserId, setInnerUserId] = useState<null | number>(null);
   const [userName, setUserName] = useState<null | string>(null);
 
-  const onLogin = async (userId: string) => {
+  const onLogin = useCallback(async (userId: string) => {
     if (!userId) {
       alert('ユーザーIDを入力してください');
       return;
@@ -28,7 +28,7 @@ function App() {
     } catch(e) {
       alert(`ログインできませんでした。詳細: ${e.message}`);
     }
-  };
+  }, []);
 
   const onLogout = useCallback(() => setInnerUserId(null), []);
 
