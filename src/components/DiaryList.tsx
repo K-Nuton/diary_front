@@ -24,7 +24,7 @@ const columns: Column[] = [
   { id: 'date', label: 'Date', minWidth: 20, format: (value: Date) => value.toLocaleString() },
   { id: 'wheather', label: 'Weather', minWidth: 20, format: (value: number) => decodeWheather(value) },
   { id: 'feeling', label: 'Feelings', minWidth: 20, format: (value: number) => decodeFeeling(value) },
-  { id: 'text', label: 'Export', minWidth: 170, format: (value: string) => value.slice(0, 50) + '...' }
+  { id: 'text', label: 'Export', minWidth: 170, format: (value: string) => value.length > 100 ? value.slice(0, 100) + '...' : value }
 ];
 
 const useStyles = makeStyles({

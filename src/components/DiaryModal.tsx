@@ -1,7 +1,7 @@
 import { createStyles, FormControl, InputBase, makeStyles, MenuItem, Modal, Select, Theme } from '@material-ui/core';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { DateTimePicker } from '@material-ui/pickers';
 
 import Fab from '@material-ui/core/Fab';

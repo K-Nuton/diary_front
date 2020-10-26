@@ -76,7 +76,7 @@ function addSaveHandler(
     if (!result) return;
 
     try {
-      const result = await DiaryAPI.update(
+      await DiaryAPI.update(
         target.diary_id,
         dateHasChanged ? date : null,
         wheatherHasChanged ? wheather : null,
