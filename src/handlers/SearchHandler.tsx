@@ -12,7 +12,6 @@ export default function getSearchHandler(
   return async function onSearch(input: string): Promise<void> {
     const text: string | null = input === "" ? null : input;
     const [from, to] = getDates();
-    console.log(from?.toLocaleDateString(), to?.toLocaleDateString());
     try {
       const diaries = await DiaryAPI.search(
         inner_user_id,

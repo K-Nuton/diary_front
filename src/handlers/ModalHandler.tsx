@@ -52,7 +52,7 @@ function addSaveHandler(
     if (!result) return;
 
     try {
-      const result = await DiaryAPI.insert(
+      await DiaryAPI.insert(
         target.inner_user_id as number,
         date,
         wheather,

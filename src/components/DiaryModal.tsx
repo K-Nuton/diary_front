@@ -107,11 +107,9 @@ export default function DiaryModal({ diary, open, edit, enterEdit, onClose }: Di
         timeout: 500,
       }}
     >
-      <>
-      <Fade in={open}>
+      <Fade in={open} disableStrictModeCompat>
         {edit ? editBody : normalBody}
       </Fade>
-      </>
     </Modal>
   );
 }

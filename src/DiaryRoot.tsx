@@ -33,14 +33,14 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const [open, edit, setModalStatus] = useModal(false, false);
   const [filter, setFilter, getDates] = useSearchBar();
 
-  const onSearch = getSearchHandler(
+  const onSearch = useCallback(getSearchHandler(
     innerUserId,
     setFilter,
     setModalStatus,
     setDiaries,
     setResetPage,
     getDates
-  );
+  ), [innerUserId, setFilter, setModalStatus, setDiaries, setResetPage, getDates]);
 
   const onSelected = useCallback((target: Diary) => {
     setTarget(target);
