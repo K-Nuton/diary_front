@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import SearchBar, { useSearchBar } from './components/SearchBar';
+import React, { useCallback, useEffect } from 'react';
+import SearchBar from './components/SearchBar';
 import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { Diary } from './model/Diary';
-import DiaryModal, { useModal } from './components/DiaryModal';
-import encodeDate from './utils/TimeUtils';
-
-import DiaryAPI from './utils/DiaryAPI';
+import DiaryModal from './components/DiaryModal';
+import { useDiaryList, useModal, useSearchBar } from './hooks/DiaryHooks';
+import getSearchHandler from './handlers/SearchHandler';
+import getDiaryTemplate from './handlers/ModalHandler';
 
 const useStyles = makeStyles((theme: Theme) => 
   createStyles({
@@ -29,150 +29,37 @@ type DiaryRoot = {
 const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const classes = useStyles();
 
-  const [diaries, setDiaries] = useState<Diary[]>([]);
-  const [target, setTarget] = useState<Diary | null>(null);
-
+  const [diaries, target, resetPage, setDiaries, setTarget, setResetPage] = useDiaryList();
   const [open, edit, setModalStatus] = useModal(false, false);
+  const [filter, setFilter, getDates] = useSearchBar();
 
-  const [resetPage, setResetPage] = useState(false);
-
-  const [onSearch, dateFilter, setFilter] = useSearchBar(innerUserId, setDiaries);
+  const onSearch = useCallback(getSearchHandler(
+    innerUserId,
+    setFilter,
+    setModalStatus,
+    setDiaries,
+    setResetPage,
+    getDates
+  ), []);
 
   const onSelected = useCallback((target: Diary) => {
-    // setEdit(false);
-    setModalStatus(null, false);
-    target.onSave = async ({ date, wheather, feeling, text }: Diary) => {
-      const uDate = target.date.getTime() === date.getTime() ? null : date;
-      const uWheather = target.wheather === wheather ? null : wheather;
-      const uFeeling = target.feeling === feeling ? null : feeling;
-      const uText = target.text === text ? null : text;
-
-      if (!target.diary_id) return;
-      if (!(uDate || uWheather || uFeeling || uText)) {
-        alert('更新する変更がありません');
-        return;
-      }
-
-      if (text.length < 10) {
-        alert('本文は10文字以上入力してください');
-        return;
-      }
-
-      const result = window.confirm('更新します');
-      if (!result) return;
-
-      const body = {
-        diary_id: target.diary_id,
-        date: uDate ? encodeDate(date) : null,
-        wheather: uWheather,
-        feeling: uFeeling,
-        text: uText
-      }
-      
-      try {
-        if (target.diary_id === undefined) return;
-        const result = await DiaryAPI.update(
-          target.diary_id,
-          uDate,
-          uWheather,
-          uFeeling,
-          uText
-        );
-      } catch(e) {
-        alert(`更新できませんでした。 詳細: ${e.message}`);
-      } finally {
-        setFilter(date, date, false, true);
-        onSearch("");
-        setModalStatus(false, null);
-      }
-      
-    };
-
-    target.onDelete = async () => {
-      const result = window.confirm('本当に削除していいですか?');
-      if (!result) return;
-
-      try {
-        if (target.diary_id === undefined) return;
-        await DiaryAPI.delete(target.diary_id);
-
-        const toDate = new Date();
-        setFilter(
-          new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate()),
-          toDate,
-          false,
-          false
-        );
-        onSearch("");
-        setModalStatus(false, null);
-      } catch(e) {
-        alert(`削除できませんでした。 詳細: ${e.message}`);
-      }
-    };
-
-    target.onCancel = async () => {
-      const result = window.confirm('変更を破棄します');
-      if (!result) return;
-      setModalStatus(false, null);
-    }
     setTarget(target);
-    setModalStatus(true, null);
-  }, [onSearch, setModalStatus, setFilter]);
+    setModalStatus(true, false);
+  }, [setModalStatus, setTarget]);
 
   // 初回検索
-  useEffect(() => onSearch(""), []);
+  useEffect(() => {
+    onSearch("")
+  }, [onSearch]);
 
   const handleModalClose = useCallback(() => setModalStatus(false, null), []);
 
   const createNew = useCallback(() => {
-    const emptyDiary: Diary = {
-      inner_user_id: innerUserId, // ここにログインで取得したものを設定する.
-      date: new Date(),
-      wheather: 0,
-      feeling: 0,
-      text: '',
-      onSave: async ({ date, wheather, feeling, text }: Diary) => {
-        if (text.length < 10) {
-          alert('本文は10文字以上入力してください');
-          return;
-        }
-
-        const result = window.confirm('以下の内容で作成します。');
-        if (!result) return;
-
-        try {
-          const result = await DiaryAPI.insert(
-            innerUserId,
-            date,
-            wheather,
-            feeling,
-            text
-          );
-        } catch(e) {
-          alert(`作成できませんでした。 詳細: ${e.message}`);
-        } finally {
-          setFilter(date, date, false, true);
-          onSearch("");
-          setModalStatus(false, null);
-        }
-      },
-      onDelete: async () => {
-        const result = window.confirm('入力を破棄してもよろしいですか?');
-        if (!result) return;
-
-        setModalStatus(false, null);
-      },
-      onCancel: async () => {
-        const result = window.confirm('入力を破棄してもよろしいですか?');
-        if (!result) return;
-        
-        setModalStatus(false, null);
-      },
-    };
-
-    setTarget(emptyDiary);
+    setTarget(getDiaryTemplate(
+      innerUserId, setFilter, onSearch, setModalStatus
+    ));
     setModalStatus(true, true);
-  }, [innerUserId, setModalStatus, onSearch, setFilter]);
+  }, [innerUserId, setTarget, setModalStatus, setFilter, onSearch]);
   
   const toggleEdit = useCallback(
     (edit: boolean) => setModalStatus(null, edit), [setModalStatus]
@@ -181,7 +68,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     <>
       <SearchBar 
         onEnter={onSearch} 
-        filter={dateFilter} 
+        filter={filter} 
         userInfo={userInfo}
       />
       <DiaryList 

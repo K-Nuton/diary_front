@@ -14,9 +14,6 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import { FormControlLabel, Popover, Switch } from '@material-ui/core';
 import { DatePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
-import { Diary } from '../model/Diary';
-import DiaryAPI from '../utils/DiaryAPI';
-import { fixDate } from '../utils/TimeUtils';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -85,86 +82,13 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-type useSearchBar = [
-  (input: string) => void,
-  Filter,
-  (
-    from: Date,
-    to: Date,
-    fromDisabled: boolean,
-    toDisabled: boolean
-  ) => void
-];
-export function useSearchBar(
-  inner_user_id: number, 
-  diaryListHandler: (value: React.SetStateAction<Diary[]>) => void
-): useSearchBar {
-  const [toDate, setToDate] = useState<Date>(new Date());
-  const [fromDate, setFromDate] = useState<Date>(
-    new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate())
-  );
-
-  const [fromDisabled, setFromDisabled] = useState(false);
-  const [toDisabled, setToDisabled] = useState(false);
-
-  function setFilter(
-    from: Date,
-    to: Date,
-    fromDisabled: boolean,
-    toDisabled: boolean
-  ): void {
-    setFromDate(fixDate(from, true));
-    setToDate(fixDate(to, false));
-    setFromDisabled(fromDisabled);
-    setToDisabled(toDisabled);
-  }
-
-  function getDates(): [Date|null, Date|null] {
-    return [
-      fromDisabled ? null : fromDate,
-      toDisabled ? null : toDate 
-    ];
-  }
-
-  const filter: Filter = {
-    from: {
-      date: fromDate,
-      onChange: (date: MaterialUiPickersDate) => setFromDate(date as Date),
-      onDisabled: (disabled: boolean) => setFromDisabled(disabled),
-      disabled: fromDisabled
-    },
-    to: {
-      date: toDate,
-      onChange: (date: MaterialUiPickersDate) => setToDate(date as Date),
-      onDisabled: (disabled: boolean) => setToDisabled(disabled),
-      disabled: toDisabled
-    }
-  };
-
-  function onSearch(input: string): void {
-    const searchText: string | null = input === "" ? null : input;
-    const [from, to] = getDates();
-
-    DiaryAPI.search(
-      inner_user_id,
-      searchText,
-      from,
-      to
-    )
-    .then(diaryListHandler)
-    .catch(() => diaryListHandler([]));
-  }
-
-  return [onSearch, filter, setFilter];
-}
-
 type DateSwitch = {
   date: Date;
   disabled: boolean;
   onChange: (date: MaterialUiPickersDate) => void;
   onDisabled: (disabled: boolean) => void;
 }
-type Filter = {
+export type Filter = {
   from: DateSwitch,
   to: DateSwitch
 };

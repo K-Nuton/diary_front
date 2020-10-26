@@ -14,6 +14,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import {
   Diary, Wheather, Feeling, decodeWheather, decodeFeeling
 } from '../model/Diary';
+import DiaryAPI from '../utils/DiaryAPI';
+import useEditModal from '../hooks/EditModalHooks';
 
 const emptyDiary: Diary = {
   date: new Date(),
@@ -75,22 +77,6 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export function useModal(init_open: boolean, init_edit: boolean): [
-  boolean,
-  boolean,
-  (open: boolean | null, edit: boolean | null) => void
-] {
-  const [open, setOpen] = useState(init_open);
-  const [edit, setEdit] = useState(init_edit);
-
-  function setModalStatus(open: boolean | null, edit: boolean | null) {
-    open !== null ? setOpen(open) : void(0);
-    edit !== null ? setEdit(edit) : void(0);
-  }
-
-  return [open, edit, setModalStatus];
-}
-
 type DiaryModal = {
   diary: Diary | null;
   open: boolean;
@@ -102,7 +88,6 @@ export default function DiaryModal({ diary, open, edit, toggleEdit, onClose }: D
   const classes = useStyles();
 
   const enterEdit = () => toggleEdit(true);
-  const exitEdit = () => diary?.onCancel ? diary.onCancel() : toggleEdit(false);
 
   const normalBody = (
     <ViewBody
@@ -114,7 +99,6 @@ export default function DiaryModal({ diary, open, edit, toggleEdit, onClose }: D
   const editBody = (
     <EditBody
       diary={diary ? diary : emptyDiary}
-      onClose={exitEdit}
     />
   );
 
@@ -165,50 +149,22 @@ export function ViewBody({ diary, onClick }: ViewBody) {
 
 type EditBody = {
   diary: Diary;
-  onClose: () => void;
 }
-export function EditBody({diary, onClose}: EditBody) {
+export function EditBody({ diary }: EditBody) {
   const classes = useStyles();
-  const [date, setDate] = useState(diary.date);
-  const handleDateChange = useCallback((date) => setDate(date), []);
-
-  const [wheather, setWheather] = useState(diary.wheather);
-  const handleWChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setWheather(event.target.value as number);
-  };
-  
-  const [feeling, setFeeling] = useState(diary.feeling);
-  const handleFChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFeeling(event.target.value as number);
-  };
-
-  const [buttonDisabled, setButtonDisabled] = useState(false);
-
-  const textRef =  useRef<HTMLTextAreaElement>(null);
-  const handleOnSave = () => {
-    const text = textRef.current ? textRef.current.value : '';
-    if (!diary.onSave) return;
-
-    setButtonDisabled(true);
-    diary.onSave({ date, wheather, feeling, text})
-      .then(() => setButtonDisabled(false));
-  };
-
-  const handleOnDelete = () => {
-    if (!diary.onDelete) return;
-
-    setButtonDisabled(true);
-    diary.onDelete()
-      .then(() => setButtonDisabled(false));
-  };
-
-  const handleOnClose = () => {
-    if (!diary.onCancel) return;
-
-    setButtonDisabled(true);
-    diary.onCancel()
-      .then(() => setButtonDisabled(false));
-  };
+  const [
+    date,
+    wheather,
+    feeling,
+    textRef,
+    buttonDisabled,
+    handleDateChange,
+    handleWChange,
+    handleFChange,
+    handleOnDelete,
+    handleOnSave,
+    handleOnClose
+  ] = useEditModal(diary);
 
   return (
     <div className={classes.paper}>

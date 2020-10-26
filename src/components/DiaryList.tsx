@@ -47,6 +47,21 @@ const useStyles = makeStyles({
   }
 });
 
+export function useDiaryList(): [
+  Diary[],
+  Diary | null,
+  boolean,
+  React.Dispatch<React.SetStateAction<Diary[]>>,
+  React.Dispatch<React.SetStateAction<Diary | null>>,
+  React.Dispatch<React.SetStateAction<boolean>>
+] {
+  const [diaries, setDiaries] = useState<Diary[]>([]);
+  const [target, setTarget] = useState<Diary | null>(null);
+  const [resetPage, setResetPage] = useState(false);
+
+  return [diaries, target, resetPage, setDiaries, setTarget, setResetPage];
+}
+
 type DiaryList = {
   diaries: Diary[];
   onSelected: (target: Diary) => void;
@@ -66,9 +81,7 @@ export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList)
     setPage(0);
   }, []);
 
-  useEffect(() => {
-    pageReset ? setPage(0) : void(0);
-  }, [pageReset]);
+  useEffect(() => pageReset ? setPage(0) : void(0), [pageReset]);
 
   return (
     <Paper className={classes.root}>
@@ -125,3 +138,4 @@ export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList)
     </Paper>
   );
 }
+
