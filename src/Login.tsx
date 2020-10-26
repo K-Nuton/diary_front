@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -51,11 +51,19 @@ export default function Login({ onLogin }: Login) {
 
   const idRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleOnLogin = () => {
+  const handleOnLogin = useCallback(() => {
     const userId = idRef.current ? idRef.current.value : '';
 
     onLogin(userId);
-  };
+  }, [onLogin]);
+
+  const handleInputEnter = useCallback((event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if ('Enter' !== event.key) return;
+
+    const userId = idRef.current ? idRef.current.value : '';
+
+    onLogin(userId);
+  }, [onLogin]);
 
   return (
     <Container component="main" maxWidth="xs">
@@ -70,6 +78,7 @@ export default function Login({ onLogin }: Login) {
         <div className={classes.form}>
           <TextField
             inputRef={idRef}
+            onKeyPress={handleInputEnter}
             variant="outlined"
             margin="normal"
             required
