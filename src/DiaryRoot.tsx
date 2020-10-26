@@ -4,7 +4,7 @@ import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { Diary } from './model/Diary';
-import DiaryModal from './components/DiaryModal';
+import DiaryModal, { useModal } from './components/DiaryModal';
 import encodeDate from './utils/TimeUtils';
 
 import DiaryAPI from './utils/DiaryAPI';
@@ -32,15 +32,15 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [target, setTarget] = useState<Diary | null>(null);
 
-  const [open, setOpen] = useState(false);
-  const [edit, setEdit] = useState(false);
+  const [open, edit, setModalStatus] = useModal(false, false);
 
   const [resetPage, setResetPage] = useState(false);
 
   const [onSearch, dateFilter, setFilter] = useSearchBar(innerUserId, setDiaries);
 
   const onSelected = useCallback((target: Diary) => {
-    setEdit(false);
+    // setEdit(false);
+    setModalStatus(null, false);
     target.onSave = async ({ date, wheather, feeling, text }: Diary) => {
       const uDate = target.date.getTime() === date.getTime() ? null : date;
       const uWheather = target.wheather === wheather ? null : wheather;
@@ -83,7 +83,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       } finally {
         setFilter(date, date, false, true);
         onSearch("");
-        setOpen(false);
+        setModalStatus(false, null);
       }
       
     };
@@ -104,7 +104,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
           false
         );
         onSearch("");
-        setOpen(false);
+        setModalStatus(false, null);
       } catch(e) {
         alert(`削除できませんでした。 詳細: ${e.message}`);
       }
@@ -113,16 +113,16 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     target.onCancel = async () => {
       const result = window.confirm('変更を破棄します');
       if (!result) return;
-      setOpen(false);
+      setModalStatus(false, null);
     }
     setTarget(target);
-    setOpen(true);
-  }, [onSearch, setFilter]);
+    setModalStatus(true, null);
+  }, [onSearch, setModalStatus, setFilter]);
 
   // 初回検索
   useEffect(() => onSearch(""), []);
 
-  const handleModalClose = useCallback(() => setOpen(false), []);
+  const handleModalClose = useCallback(() => setModalStatus(false, null), []);
 
   const createNew = useCallback(() => {
     const emptyDiary: Diary = {
@@ -153,28 +153,30 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         } finally {
           setFilter(date, date, false, true);
           onSearch("");
-          setOpen(false);
+          setModalStatus(false, null);
         }
       },
       onDelete: async () => {
         const result = window.confirm('入力を破棄してもよろしいですか?');
         if (!result) return;
 
-        setOpen(false)
+        setModalStatus(false, null);
       },
       onCancel: async () => {
         const result = window.confirm('入力を破棄してもよろしいですか?');
         if (!result) return;
         
-        setOpen(false)
+        setModalStatus(false, null);
       },
     };
 
-    setEdit(true);
     setTarget(emptyDiary);
-    setOpen(true);
-  }, [innerUserId, onSearch, setFilter]);
+    setModalStatus(true, true);
+  }, [innerUserId, setModalStatus, onSearch, setFilter]);
   
+  const toggleEdit = useCallback(
+    (edit: boolean) => setModalStatus(null, edit), [setModalStatus]
+  );
   return (  
     <>
       <SearchBar 
@@ -191,7 +193,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         diary={target} 
         open={open} 
         edit={edit} 
-        toggleEdit={setEdit} 
+        toggleEdit={toggleEdit} 
         onClose={handleModalClose}
       />
       <Fab 

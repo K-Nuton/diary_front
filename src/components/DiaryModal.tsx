@@ -75,6 +75,22 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
+export function useModal(init_open: boolean, init_edit: boolean): [
+  boolean,
+  boolean,
+  (open: boolean | null, edit: boolean | null) => void
+] {
+  const [open, setOpen] = useState(init_open);
+  const [edit, setEdit] = useState(init_edit);
+
+  function setModalStatus(open: boolean | null, edit: boolean | null) {
+    open !== null ? setOpen(open) : void(0);
+    edit !== null ? setEdit(edit) : void(0);
+  }
+
+  return [open, edit, setModalStatus];
+}
+
 type DiaryModal = {
   diary: Diary | null;
   open: boolean;
