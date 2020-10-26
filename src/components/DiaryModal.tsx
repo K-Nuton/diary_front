@@ -89,7 +89,7 @@ export default function DiaryModal({ diary, open, edit, enterEdit, onClose }: Di
   const editBody = (
     <EditBody
       diary={diary}
-      hooks={useEditModal(diary)}
+      {...useEditModal(diary)}
     />
   );
   
@@ -138,27 +138,26 @@ export function ViewBody({ diary, onClick }: ViewBody) {
   );
 }
 
-type EditBody = {
+type EditBody = UseEditModal & {
   diary: Diary;
-  hooks: UseEditModal;
 }
-export function EditBody({ diary, hooks }: EditBody) {
+export function EditBody(props: EditBody) {
   const classes = useStyles();
 
   return (
     <div className={classes.paper}>
       <DateTimePicker 
-        value={hooks.date} 
+        value={props.date} 
         variant='inline'
-        onChange={hooks.handleDateChange}
+        onChange={props.handleDateChange}
         ampm={false}
         disableFuture
         format='yyyy/MM/dd HH:mm'
       />
       <FormControl >
         <Select 
-          value={hooks.wheather}
-          onChange={hooks.handleWChange}
+          value={props.wheather}
+          onChange={props.handleWChange}
         > 
           <MenuItem value={Wheather.SUNNY}>
             <span role='img' aria-label='sunny'>{decodeWheather(Wheather.SUNNY)}</span>
@@ -182,8 +181,8 @@ export function EditBody({ diary, hooks }: EditBody) {
       </FormControl>
       <FormControl>
         <Select
-          value={hooks.feeling}
-          onChange={hooks.handleFChange}
+          value={props.feeling}
+          onChange={props.handleFChange}
         >
           <MenuItem value={Feeling.HAPPY}>
             <span role='img' aria-label='happy'>{decodeFeeling(Feeling.HAPPY)}</span>
@@ -203,10 +202,10 @@ export function EditBody({ diary, hooks }: EditBody) {
         </Select>
       </FormControl>
       <InputBase
-        inputRef={hooks.textRef}
+        inputRef={props.textRef}
         className={classes.editTextMargin}
         rows={20}
-        defaultValue={diary.text}
+        defaultValue={props.diary.text}
         multiline
         fullWidth
         rowsMax={20}
@@ -215,8 +214,8 @@ export function EditBody({ diary, hooks }: EditBody) {
       <div className={classes.editButtonWrapper}>
         <div className={classes.delete}>
           <IconButton
-            onClick={hooks.handleOnDelete}
-            disabled={hooks.buttonDisabled} 
+            onClick={props.handleOnDelete}
+            disabled={props.buttonDisabled} 
             aria-label="delete"
           >
             <DeleteIcon fontSize="small" />
@@ -224,7 +223,7 @@ export function EditBody({ diary, hooks }: EditBody) {
         </div>
         <div className={classes.close}>
           <Fab
-            onClick={hooks.handleOnSave}
+            onClick={props.handleOnSave}
             variant="extended"
             size="medium"
             color="primary"
@@ -235,7 +234,7 @@ export function EditBody({ diary, hooks }: EditBody) {
           </Fab>
           <IconButton 
             aria-label='close' 
-            onClick={hooks.handleOnClose}
+            onClick={props.handleOnClose}
           >
             <CloseIcon fontSize='small'/>
           </IconButton>
