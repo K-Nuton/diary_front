@@ -37,13 +37,13 @@ export function getHandler(
 ): SelectTarget {
   return {
     diary: target,
-    saveHandler: addSaveHandler(target, setFilter, onSearch, setModalStatus),
-    deleteHandler: addDeleteHandler(target, setFilter, onSearch, setModalStatus),
-    cancelHandler: addCancelHandler(target, setModalStatus)
+    saveHandler: getSaveHandler(target, setFilter, onSearch, setModalStatus),
+    deleteHandler: getDeleteHandler(target, setFilter, onSearch, setModalStatus),
+    cancelHandler: getCancelHandler(target, setModalStatus)
   };
 }
 
-function addSaveHandler(
+function getSaveHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
@@ -87,7 +87,7 @@ function addSaveHandler(
   }
 }
 
-function addDeleteHandler(
+function getDeleteHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
@@ -115,7 +115,7 @@ function addDeleteHandler(
   }
 }
 
-function addCancelHandler(
+function getCancelHandler(
   target: Diary,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): () => Promise<void> {
