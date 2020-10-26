@@ -56,7 +56,7 @@ export default class DiaryAPI {
 
     const raws: RawDiary[] = (await res.json()).diaries;
 
-    return raws.map(this.encodeRaw2Diary);
+    return raws.map(this.encodeRaw2Diary).reverse();
   }
 
   public static async insert(

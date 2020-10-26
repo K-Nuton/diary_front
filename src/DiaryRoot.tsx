@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import SearchBar from './components/SearchBar';
+import SearchBar, { useSearchBar } from './components/SearchBar';
 import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import { Diary } from './model/Diary';
 import DiaryModal from './components/DiaryModal';
-import DiaryBody from './model/DiaryBody';
 import encodeDate from './utils/TimeUtils';
 
 import DiaryAPI from './utils/DiaryAPI';
@@ -31,16 +29,6 @@ type DiaryRoot = {
 const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const classes = useStyles();
 
-  const [searchInput, setSearchInput] = useState('');
-
-  const [toDate, setToDate] = useState<Date>(new Date());
-  const [fromDate, setFromDate] = useState<Date>(
-    new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate())
-  );
-
-  const [fromDisabled, setFromDisabled] = useState(false);
-  const [toDisabled, setToDisabled] = useState(false);
-
   const [diaries, setDiaries] = useState<Diary[]>([]);
   const [target, setTarget] = useState<Diary | null>(null);
 
@@ -49,25 +37,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
 
   const [resetPage, setResetPage] = useState(false);
 
-  const onEnter = useCallback((input: string) => {
-    setSearchInput(input);
-    console.log(input, fromDate, toDate)
-  }, [fromDate, toDate]);
-
-  const filter = {
-    from: {
-      date: fromDate,
-      onChange: (date: MaterialUiPickersDate) => setFromDate(date as Date),
-      onDisabled: (disabled: boolean) => setFromDisabled(disabled),
-      disabled: fromDisabled
-    },
-    to: {
-      date: toDate,
-      onChange: (date: MaterialUiPickersDate) => setToDate(date as Date),
-      onDisabled: (disabled: boolean) => setToDisabled(disabled),
-      disabled: toDisabled
-    }
-  }
+  const [onSearch, dateFilter, setFilter] = useSearchBar(innerUserId, setDiaries);
 
   const onSelected = useCallback((target: Diary) => {
     setEdit(false);
@@ -111,10 +81,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       } catch(e) {
         alert(`更新できませんでした。 詳細: ${e.message}`);
       } finally {
-        setFromDisabled(false);
-        setToDisabled(true);
-        setFromDate(date);
-        setToDate(date);
+        setFilter(date, date, false, true);
+        onSearch("");
         setOpen(false);
       }
       
@@ -128,10 +96,14 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         if (target.diary_id === undefined) return;
         await DiaryAPI.delete(target.diary_id);
 
-        setFromDisabled(false);
-        setToDisabled(false);
-        setToDate(new Date());
-        setFromDate(new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate()));
+        const toDate = new Date();
+        setFilter(
+          new Date(toDate.getFullYear(), toDate.getMonth()-2, toDate.getDate()),
+          toDate,
+          false,
+          false
+        );
+        onSearch("");
         setOpen(false);
       } catch(e) {
         alert(`削除できませんでした。 詳細: ${e.message}`);
@@ -145,43 +117,10 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     }
     setTarget(target);
     setOpen(true);
-  }, [toDate]);
+  }, [onSearch, setFilter]);
 
-  const searchBody = useCallback(async (
-    inner_user_id: number,
-    searchInput: string | null,
-    fromDate: Date | null,
-    toDate: Date | null
-  ) => {
-    setResetPage(true);
-
-    try {
-      const diaries = await DiaryAPI.search(
-        inner_user_id,
-        searchInput,
-        fromDate,
-        toDate
-      );
-      setDiaries(diaries.reverse());
-    } catch (e) {
-      setDiaries([]);
-    } finally {
-      setResetPage(false);
-    }
-  }, []);
-
-  // 検索用
-  useEffect(
-    () => {  
-      searchBody(
-        innerUserId,
-        searchInput || null,
-        fromDisabled ? null : fromDate,
-        toDisabled ? null : toDate
-      );
-    }, 
-    [innerUserId, searchInput, fromDate, toDate, fromDisabled, toDisabled, searchBody]
-  );
+  // 初回検索
+  useEffect(() => onSearch(""), []);
 
   const handleModalClose = useCallback(() => setOpen(false), []);
 
@@ -212,10 +151,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         } catch(e) {
           alert(`作成できませんでした。 詳細: ${e.message}`);
         } finally {
-          setFromDisabled(false);
-          setToDisabled(true);
-          setFromDate(date);
-          setToDate(date);
+          setFilter(date, date, false, true);
+          onSearch("");
           setOpen(false);
         }
       },
@@ -236,13 +173,13 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     setEdit(true);
     setTarget(emptyDiary);
     setOpen(true);
-  }, [innerUserId]);
+  }, [innerUserId, onSearch, setFilter]);
   
   return (  
     <>
       <SearchBar 
-        onEnter={onEnter} 
-        filter={filter} 
+        onEnter={onSearch} 
+        filter={dateFilter} 
         userInfo={userInfo}
       />
       <DiaryList 
