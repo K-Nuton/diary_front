@@ -1,19 +1,20 @@
 import { RefObject, useCallback, useRef, useState } from "react";
 import { Diary } from "../model/Diary";
 
-export default function useEditModal(diary: Diary): [
-  Date,
-  number,
-  number,
-  RefObject<HTMLTextAreaElement>,
-  boolean,
-  (date: any) => void,
-  (event: React.ChangeEvent<{value: unknown;}>) => void,
-  (event: React.ChangeEvent<{value: unknown;}>) => void,
-  () => void,
-  () => void,
-  () => void
-] {
+export type UseEditModal = {
+  date: Date;
+  wheather: number;
+  feeling: number;
+  textRef: RefObject<HTMLTextAreaElement>;
+  buttonDisabled: boolean;
+  handleDateChange: (date: any) => void;
+  handleWChange: (event: React.ChangeEvent<{value: unknown;}>) => void;
+  handleFChange: (event: React.ChangeEvent<{value: unknown;}>) => void;
+  handleOnDelete: () => void
+  handleOnSave: () => void
+  handleOnClose: () => void
+}
+export default function useEditModal(diary: Diary): UseEditModal {
   const [date, setDate] = useState(diary.date);
   const handleDateChange = useCallback((date) => setDate(date), []);
 
@@ -55,7 +56,7 @@ export default function useEditModal(diary: Diary): [
       .then(() => setButtonDisabled(false));
   };
 
-  return [
+  return {
     date, 
     wheather, 
     feeling, 
@@ -67,5 +68,5 @@ export default function useEditModal(diary: Diary): [
     handleOnDelete,
     handleOnSave, 
     handleOnClose 
-  ];
+  };
 }

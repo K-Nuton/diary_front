@@ -14,7 +14,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import {
   Diary, Wheather, Feeling, decodeWheather, decodeFeeling
 } from '../model/Diary';
-import useEditModal from '../hooks/EditModalHooks';
+import useEditModal, { UseEditModal } from '../hooks/EditModalHooks';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -89,9 +89,10 @@ export default function DiaryModal({ diary, open, edit, enterEdit, onClose }: Di
   const editBody = (
     <EditBody
       diary={diary}
+      hooks={useEditModal(diary)}
     />
   );
-
+  
   return (
     <Modal
       aria-labelledby='transition-modal-title'
@@ -139,37 +140,25 @@ export function ViewBody({ diary, onClick }: ViewBody) {
 
 type EditBody = {
   diary: Diary;
+  hooks: UseEditModal;
 }
-export function EditBody({ diary }: EditBody) {
+export function EditBody({ diary, hooks }: EditBody) {
   const classes = useStyles();
-  const [
-    date,
-    wheather,
-    feeling,
-    textRef,
-    buttonDisabled,
-    handleDateChange,
-    handleWChange,
-    handleFChange,
-    handleOnDelete,
-    handleOnSave,
-    handleOnClose
-  ] = useEditModal(diary);
 
   return (
     <div className={classes.paper}>
       <DateTimePicker 
-        value={date} 
+        value={hooks.date} 
         variant='inline'
-        onChange={handleDateChange}
+        onChange={hooks.handleDateChange}
         ampm={false}
         disableFuture
         format='yyyy/MM/dd HH:mm'
       />
       <FormControl >
         <Select 
-          value={wheather}
-          onChange={handleWChange}
+          value={hooks.wheather}
+          onChange={hooks.handleWChange}
         > 
           <MenuItem value={Wheather.SUNNY}>
             <span role='img' aria-label='sunny'>{decodeWheather(Wheather.SUNNY)}</span>
@@ -193,8 +182,8 @@ export function EditBody({ diary }: EditBody) {
       </FormControl>
       <FormControl>
         <Select
-          value={feeling}
-          onChange={handleFChange}
+          value={hooks.feeling}
+          onChange={hooks.handleFChange}
         >
           <MenuItem value={Feeling.HAPPY}>
             <span role='img' aria-label='happy'>{decodeFeeling(Feeling.HAPPY)}</span>
@@ -214,7 +203,7 @@ export function EditBody({ diary }: EditBody) {
         </Select>
       </FormControl>
       <InputBase
-        inputRef={textRef}
+        inputRef={hooks.textRef}
         className={classes.editTextMargin}
         rows={20}
         defaultValue={diary.text}
@@ -226,8 +215,8 @@ export function EditBody({ diary }: EditBody) {
       <div className={classes.editButtonWrapper}>
         <div className={classes.delete}>
           <IconButton
-            onClick={handleOnDelete}
-            disabled={buttonDisabled} 
+            onClick={hooks.handleOnDelete}
+            disabled={hooks.buttonDisabled} 
             aria-label="delete"
           >
             <DeleteIcon fontSize="small" />
@@ -235,7 +224,7 @@ export function EditBody({ diary }: EditBody) {
         </div>
         <div className={classes.close}>
           <Fab
-            onClick={handleOnSave}
+            onClick={hooks.handleOnSave}
             variant="extended"
             size="medium"
             color="primary"
@@ -246,7 +235,7 @@ export function EditBody({ diary }: EditBody) {
           </Fab>
           <IconButton 
             aria-label='close' 
-            onClick={handleOnClose}
+            onClick={hooks.handleOnClose}
           >
             <CloseIcon fontSize='small'/>
           </IconButton>
