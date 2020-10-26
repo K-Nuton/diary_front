@@ -151,7 +151,8 @@ export function useSearchBar(
       from,
       to
     )
-    .then(diaryListHandler);
+    .then(diaryListHandler)
+    .catch(() => diaryListHandler([]));
   }
 
   return [onSearch, filter, setFilter];
