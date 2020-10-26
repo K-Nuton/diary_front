@@ -14,7 +14,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import {
   Diary, Wheather, Feeling, decodeWheather, decodeFeeling
 } from '../model/Diary';
-import useEditModal, { UseEditModal } from '../hooks/EditModalHooks';
+import useEditModal from '../hooks/EditModalHooks';
+import { SelectTarget } from '../hooks/DiaryHooks';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -70,26 +71,25 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 type DiaryModal = {
-  diary: Diary;
+  selectTarget: SelectTarget;
   open: boolean;
   edit: boolean;
   enterEdit: () => void;
   onClose: () => void;
 }
-export default function DiaryModal({ diary, open, edit, enterEdit, onClose }: DiaryModal): JSX.Element {
+export default function DiaryModal({ selectTarget, open, edit, enterEdit, onClose }: DiaryModal): JSX.Element {
   const classes = useStyles();
 
   const normalBody = (
     <ViewBody
-      diary={diary}
+      diary={selectTarget.diary}
       onClick={enterEdit}
     />
   );
 
   const editBody = (
     <EditBody
-      diary={diary}
-      {...useEditModal(diary)}
+      selectTarget={selectTarget}
     />
   );
   
@@ -136,26 +136,32 @@ export function ViewBody({ diary, onClick }: ViewBody) {
   );
 }
 
-type EditBody = UseEditModal & {
-  diary: Diary;
+type EditBody = {
+  selectTarget: SelectTarget;
 }
-export function EditBody(props: EditBody) {
+export function EditBody({ selectTarget }: EditBody) {
   const classes = useStyles();
+  const { diary } = selectTarget;
+  const { 
+    date, wheather, feeling, textRef,
+    handleDateChange, handleWChange, handleFChange,
+    handleOnSave, handleOnClose, handleOnDelete
+  } = useEditModal(selectTarget);
 
   return (
     <div className={classes.paper}>
       <DateTimePicker 
-        value={props.date} 
+        value={date} 
         variant='inline'
-        onChange={props.handleDateChange}
+        onChange={handleDateChange}
         ampm={false}
         disableFuture
         format='yyyy/MM/dd HH:mm'
       />
       <FormControl >
         <Select 
-          value={props.wheather}
-          onChange={props.handleWChange}
+          value={wheather}
+          onChange={handleWChange}
         > 
           <MenuItem value={Wheather.SUNNY}>
             <span role='img' aria-label='sunny'>{decodeWheather(Wheather.SUNNY)}</span>
@@ -179,8 +185,8 @@ export function EditBody(props: EditBody) {
       </FormControl>
       <FormControl>
         <Select
-          value={props.feeling}
-          onChange={props.handleFChange}
+          value={feeling}
+          onChange={handleFChange}
         >
           <MenuItem value={Feeling.HAPPY}>
             <span role='img' aria-label='happy'>{decodeFeeling(Feeling.HAPPY)}</span>
@@ -200,10 +206,10 @@ export function EditBody(props: EditBody) {
         </Select>
       </FormControl>
       <InputBase
-        inputRef={props.textRef}
+        inputRef={textRef}
         className={classes.editTextMargin}
         rows={20}
-        defaultValue={props.diary.text}
+        defaultValue={diary.text}
         multiline
         fullWidth
         rowsMax={20}
@@ -212,8 +218,7 @@ export function EditBody(props: EditBody) {
       <div className={classes.editButtonWrapper}>
         <div className={classes.delete}>
           <IconButton
-            onClick={props.handleOnDelete}
-            disabled={props.buttonDisabled} 
+            onClick={handleOnDelete}
             aria-label="delete"
           >
             <DeleteIcon fontSize="small" />
@@ -221,7 +226,7 @@ export function EditBody(props: EditBody) {
         </div>
         <div className={classes.close}>
           <Fab
-            onClick={props.handleOnSave}
+            onClick={handleOnSave}
             variant="extended"
             size="medium"
             color="primary"
@@ -232,7 +237,7 @@ export function EditBody(props: EditBody) {
           </Fab>
           <IconButton 
             aria-label='close' 
-            onClick={props.handleOnClose}
+            onClick={handleOnClose}
           >
             <CloseIcon fontSize='small'/>
           </IconButton>

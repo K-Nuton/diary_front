@@ -1,3 +1,4 @@
+import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
 import DiaryAPI from "../utils/DiaryAPI";
 
@@ -6,11 +7,17 @@ export default function getDiaryTemplate(
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): Diary {
+): SelectTarget {
   const diary = getEmpty(inner_user_id);
-  addHandler(diary, setFilter, onSearch, setModalStatus);
 
-  return diary;
+  const saveHandler = getSaveHandler(diary, setFilter, onSearch, setModalStatus);
+  const deleteHandler = getDeleteAndCancelHandler(setModalStatus);
+  return {
+    diary,
+    saveHandler,
+    deleteHandler,
+    cancelHandler: deleteHandler
+  }
 }
 
 function getEmpty(inner_user_id: number): Diary {
@@ -23,26 +30,15 @@ function getEmpty(inner_user_id: number): Diary {
   }
 }
 
-function addHandler(
+function getSaveHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): void {
-  addSaveHandler(target, setFilter, onSearch, setModalStatus);
-  target.onDelete = addDeleteAndCancelHandler(setModalStatus);
-  target.onCancel = addDeleteAndCancelHandler(setModalStatus);
-}
+): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
+  if (target.inner_user_id === undefined) throw new Error('ログインしなおしてください');
 
-function addSaveHandler(
-  target: Diary,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): void {
-  if (target.inner_user_id === undefined) return;
-
-  target.onSave = async ({ date, wheather, feeling, text} ) => {
+  return async ({ date, wheather, feeling, text} ) => {
     if (text.length < 10) {
       alert('本文は10文字以上入力してください');
       return;
@@ -71,9 +67,9 @@ function addSaveHandler(
   }
 }
 
-function addDeleteAndCancelHandler(
+function getDeleteAndCancelHandler(
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): () => Promise<any> {
+): () => Promise<void> {
   return async () => {
     const result = window.confirm('入力を破棄してもよろしいですか?');
     if (!result) return;

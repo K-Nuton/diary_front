@@ -4,20 +4,33 @@ import { Filter } from '../components/SearchBar';
 import { Diary, Feeling, Wheather } from '../model/Diary';
 import { fixDate } from '../utils/TimeUtils';
 
+export type SelectTarget = {
+  diary: Diary;
+  saveHandler: ({ date, wheather, feeling, text }: Diary) => Promise<void>;
+  deleteHandler: () => Promise<void>;
+  cancelHandler: () => Promise<void>;
+};
+
 export function useDiaryList(): [
   Diary[],
-  Diary,
+  SelectTarget,
   boolean,
   React.Dispatch<React.SetStateAction<Diary[]>>,
-  React.Dispatch<React.SetStateAction<Diary>>,
+  React.Dispatch<React.SetStateAction<SelectTarget>>,
   React.Dispatch<React.SetStateAction<boolean>>
 ] {
   const [diaries, setDiaries] = useState<Diary[]>([]);
-  const [target, setTarget] = useState<Diary>({
-    date: new Date(),
-    wheather: Wheather.SUNNY,
-    feeling: Feeling.HAPPY,
-    text: ''
+
+  const [target, setTarget] = useState<SelectTarget>({
+    diary: {
+      date: new Date(),
+      wheather: Wheather.SUNNY,
+      feeling: Feeling.HAPPY,
+      text: ''
+    },
+    saveHandler: async ({ date, wheather, feeling, text }) => {return},
+    deleteHandler: async () => {return},
+    cancelHandler: async () => {return}
   });
   const [resetPage, setResetPage] = useState(false);
 

@@ -1,10 +1,9 @@
+import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
 import DiaryAPI from "../utils/DiaryAPI";
 
-export default function getSearchHandler(
+export default function searchDiaries(
   inner_user_id: number,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void,
   setDiaries: (value: React.SetStateAction<Diary[]>) => void,
   setPage: (value: React.SetStateAction<boolean>) => void,
   getDates: () => [Date | null, Date | null]
@@ -20,13 +19,6 @@ export default function getSearchHandler(
         to
       );
 
-      diaries.forEach((diary) => addHandler(
-        diary,
-        setFilter,
-        onSearch,
-        setModalStatus
-      ));
-
       setDiaries(diaries);
     } catch(e) {
       setDiaries([]);
@@ -37,15 +29,18 @@ export default function getSearchHandler(
   };
 }
 
-function addHandler(
+export function getHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-) {
-  addSaveHandler(target, setFilter, onSearch, setModalStatus);
-  addDeleteHandler(target, setFilter, onSearch, setModalStatus);
-  addCancelHandler(target, setModalStatus);
+): SelectTarget {
+  return {
+    diary: target,
+    saveHandler: addSaveHandler(target, setFilter, onSearch, setModalStatus),
+    deleteHandler: addDeleteHandler(target, setFilter, onSearch, setModalStatus),
+    cancelHandler: addCancelHandler(target, setModalStatus)
+  };
 }
 
 function addSaveHandler(
@@ -53,8 +48,8 @@ function addSaveHandler(
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): void {
-  target.onSave = async ({ date, wheather, feeling, text }) => {
+): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
+  return async ({ date, wheather, feeling, text }) => {
     const dateHasChanged = target.date.getTime() !== date.getTime();
     const wheatherHasChanged  = target.wheather !== wheather;
     const feelingHasChanged = target.feeling !== feeling;
@@ -97,8 +92,8 @@ function addDeleteHandler(
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: (input: string) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): void {
-  target.onDelete = async () => {
+): () => Promise<void> {
+  return async () => {
     const result = window.confirm('本当に削除していいですか?');
     if (!result) return;
 
@@ -123,8 +118,8 @@ function addDeleteHandler(
 function addCancelHandler(
   target: Diary,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
-): void {
-  target.onCancel = async () => {
+): () => Promise<void> {
+  return async () => {
     const result = window.confirm('変更を破棄します');
     if (!result) return;
     setModalStatus(false, null);

@@ -1,20 +1,21 @@
 import { RefObject, useCallback, useRef, useState } from "react";
-import { Diary } from "../model/Diary";
+import { SelectTarget } from "./DiaryHooks";
 
 export type UseEditModal = {
   date: Date;
   wheather: number;
   feeling: number;
   textRef: RefObject<HTMLTextAreaElement>;
-  buttonDisabled: boolean;
   handleDateChange: (date: any) => void;
   handleWChange: (event: React.ChangeEvent<{value: unknown;}>) => void;
   handleFChange: (event: React.ChangeEvent<{value: unknown;}>) => void;
+  handleOnSave: () => void;
+  handleOnClose: () => void;
   handleOnDelete: () => void
-  handleOnSave: () => void
-  handleOnClose: () => void
 }
-export default function useEditModal(diary: Diary): UseEditModal {
+export default function useEditModal(selectTarget: SelectTarget): UseEditModal {
+  const { diary, saveHandler, deleteHandler, cancelHandler } = selectTarget;
+
   const [date, setDate] = useState(diary.date);
   const handleDateChange = useCallback((date) => setDate(date), []);
 
@@ -28,45 +29,31 @@ export default function useEditModal(diary: Diary): UseEditModal {
     setFeeling(event.target.value as number);
   };
 
-  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const textRef = useRef<HTMLTextAreaElement>(null);
 
-  const textRef =  useRef<HTMLTextAreaElement>(null);
-  const handleOnSave = () => {
-    const text = textRef.current ? textRef.current.value : '';
-    if (!diary.onSave) return;
+  const handleOnDelete = useCallback(() => {
+    deleteHandler()
+  }, [deleteHandler]);
+  
+  const handleOnSave = useCallback(() => {
+    const text = textRef.current ? textRef.current.value : "";
+    saveHandler({ date, wheather, feeling, text });
+  }, [date, feeling, saveHandler, wheather]);
 
-    setButtonDisabled(true);
-    diary.onSave({ date, wheather, feeling, text})
-      .then(() => setButtonDisabled(false));
-  };
-
-  const handleOnDelete = () => {
-    if (!diary.onDelete) return;
-
-    setButtonDisabled(true);
-    diary.onDelete()
-      .then(() => setButtonDisabled(false));
-  };
-
-  const handleOnClose = () => {
-    if (!diary.onCancel) return;
-
-    setButtonDisabled(true);
-    diary.onCancel()
-      .then(() => setButtonDisabled(false));
-  };
+  const handleOnClose = useCallback(() => {
+    cancelHandler();
+  }, [cancelHandler]);
 
   return {
     date, 
     wheather, 
     feeling, 
-    textRef, 
-    buttonDisabled, 
+    textRef,
     handleDateChange, 
     handleWChange, 
-    handleFChange, 
+    handleFChange,
     handleOnDelete,
-    handleOnSave, 
-    handleOnClose 
+    handleOnSave,
+    handleOnClose
   };
 }

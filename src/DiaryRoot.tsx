@@ -6,7 +6,7 @@ import AddIcon from '@material-ui/icons/Add';
 import { Diary } from './model/Diary';
 import DiaryModal from './components/DiaryModal';
 import { useDiaryList, useModal, useSearchBar } from './hooks/DiaryHooks';
-import getSearchHandler from './handlers/SearchHandler';
+import searchDiaries, { getHandler } from './handlers/SearchHandler';
 import getDiaryTemplate from './handlers/ModalHandler';
 
 const useStyles = makeStyles((theme: Theme) => 
@@ -33,19 +33,22 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const [open, edit, setModalStatus] = useModal(false, false);
   const [filter, setFilter, getDates] = useSearchBar();
 
-  const onSearch = useCallback(getSearchHandler(
+  const onSearch = useCallback(searchDiaries(
     innerUserId,
-    setFilter,
-    setModalStatus,
     setDiaries,
     setResetPage,
     getDates
-  ), [innerUserId, setFilter, setModalStatus, setDiaries, setResetPage, getDates]);
+  ), [innerUserId, searchDiaries, setDiaries, setResetPage, getDates]);
 
   const onSelected = useCallback((target: Diary) => {
-    setTarget(target);
+    setTarget(getHandler(
+      target,
+      setFilter,
+      onSearch,
+      setModalStatus
+    ));
     setModalStatus(true, false);
-  }, [setModalStatus, setTarget]);
+  }, [onSearch, setFilter, setModalStatus, setTarget]);
 
   const handleModalClose = useCallback(() => setModalStatus(false, null), [setModalStatus]);
 
@@ -79,7 +82,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         pageReset={resetPage} 
       />
       <DiaryModal 
-        diary={target} 
+        selectTarget={target} 
         open={open} 
         edit={edit} 
         enterEdit={toggleEdit} 
