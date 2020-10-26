@@ -12,6 +12,7 @@ export type Diary = {
   inner_user_id?: number;
   diary_id?: number;
   date: Date;
+  end_date?: Date;
   update_date?: Date;
   wheather: number;
   feeling: number;

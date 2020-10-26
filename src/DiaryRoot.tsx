@@ -4,10 +4,12 @@ import DiaryList from './components/DiaryList';
 import { createStyles, Fab, makeStyles, Theme } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
-import { Diary, RawDiary } from './model/Diary';
+import { Diary } from './model/Diary';
 import DiaryModal from './components/DiaryModal';
 import DiaryBody from './model/DiaryBody';
 import encodeDate from './utils/TimeUtils';
+
+import DiaryAPI from './utils/DiaryAPI';
 
 const useStyles = makeStyles((theme: Theme) => 
   createStyles({
@@ -18,46 +20,6 @@ const useStyles = makeStyles((theme: Theme) =>
     }
   })
 );
-
-function createRow({ 
-  inner_user_id,
-  diary_id,
-  date,
-  update_date,
-  wheather,
-  feeling,
-  text
- }: RawDiary): Diary {
-  return {
-    inner_user_id,
-    diary_id,
-    date: new Date(date),
-    update_date: new Date(update_date),
-    wheather,
-    feeling,
-    text
-  };
-}
-
-async function search(body: DiaryBody): Promise<Diary[]> {
-  const res = await fetch(
-    '../web_diary/search',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: body.toString()
-    }
-  );
-
-  const json = await res.json();
-  if (json.error) throw new Error(json.error.message);
-
-  const raws: RawDiary[] = json.diaries;
-
-  return raws.map(createRow);
-}
 
 type DiaryRoot = {
   innerUserId: number;
@@ -138,21 +100,14 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       }
       
       try {
-        const res = await fetch(
-          '../web_diary/diary',
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body, (_, v) => v || undefined)
-          }
+        if (target.diary_id === undefined) return;
+        const result = await DiaryAPI.update(
+          target.diary_id,
+          uDate,
+          uWheather,
+          uFeeling,
+          uText
         );
-        const json = await res.json();
-
-        if (json.error) {
-          alert(`更新できませんでした。 詳細: ${json.error.message}`);
-        }
       } catch(e) {
         alert(`更新できませんでした。 詳細: ${e.message}`);
       } finally {
@@ -170,16 +125,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       if (!result) return;
 
       try {
-        const res = await fetch(
-          `../web_diary/diary/${target.diary_id}`,
-          { method: 'DELETE' }
-        );
-
-        const status = res.status;
-        if (status !== 204) {
-          alert(`削除できませんでした。 詳細: ${status}`);
-          return;
-        }
+        if (target.diary_id === undefined) return;
+        await DiaryAPI.delete(target.diary_id);
 
         setFromDisabled(false);
         setToDisabled(false);
@@ -200,11 +147,21 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     setOpen(true);
   }, [toDate]);
 
-  const searchBody = useCallback(async (body: DiaryBody) => {
+  const searchBody = useCallback(async (
+    inner_user_id: number,
+    searchInput: string | null,
+    fromDate: Date | null,
+    toDate: Date | null
+  ) => {
     setResetPage(true);
 
     try {
-      const diaries = await search(body);
+      const diaries = await DiaryAPI.search(
+        inner_user_id,
+        searchInput,
+        fromDate,
+        toDate
+      );
       setDiaries(diaries.reverse());
     } catch (e) {
       setDiaries([]);
@@ -215,15 +172,13 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
 
   // 検索用
   useEffect(
-    () => {
-      const body = new DiaryBody(
+    () => {  
+      searchBody(
         innerUserId,
         searchInput || null,
         fromDisabled ? null : fromDate,
-        fromDisabled || toDisabled ? null : toDate
+        toDisabled ? null : toDate
       );
-  
-      searchBody(body);
     }, 
     [innerUserId, searchInput, fromDate, toDate, fromDisabled, toDisabled, searchBody]
   );
@@ -243,34 +198,17 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
           return;
         }
 
-        const body = {
-          inner_user_id: innerUserId,
-          date: encodeDate(date),
-          wheather: wheather,
-          feeling: feeling,
-          text: text
-        };
-
         const result = window.confirm('以下の内容で作成します。');
         if (!result) return;
 
         try {
-          const res = await fetch(
-            '../web_diary/diary',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(body)
-            }
+          const result = await DiaryAPI.insert(
+            innerUserId,
+            date,
+            wheather,
+            feeling,
+            text
           );
-  
-          const json = await res.json();
-
-          if (json.error) {
-            alert(`作成できませんでした。 詳細: ${json.error.message}`);
-          }
         } catch(e) {
           alert(`作成できませんでした。 詳細: ${e.message}`);
         } finally {
