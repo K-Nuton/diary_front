@@ -108,7 +108,9 @@ export default function DiaryModal({ selectTarget, open, edit, enterEdit, onClos
       }}
     >
       <Fade in={open} disableStrictModeCompat>
-        {edit ? editBody : normalBody}
+        <>
+          {edit ? editBody : normalBody}
+        </>
       </Fade>
     </Modal>
   );

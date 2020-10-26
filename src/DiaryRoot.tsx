@@ -66,6 +66,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   // 初回検索
   useEffect(() => {
     onSearch("")
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (  
