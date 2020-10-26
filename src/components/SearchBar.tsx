@@ -10,10 +10,13 @@ import Menu from '@material-ui/core/Menu';
 import ImportContactsIcon from '@material-ui/icons/ImportContacts';
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
+import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { FormControlLabel, Popover, Switch } from '@material-ui/core';
 import { DatePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
+import { Diary } from '../model/Diary';
+import { downloadDiaries } from '../handlers/DownloadHandler';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -98,9 +101,10 @@ type PrimarySearchAppBar = {
   userInfo: {
     userName: string;
     onLogout: () => void;
-  }
+  },
+  diaries: Diary[]
 };
-export default function SearchBar({ onEnter, filter, userInfo }: PrimarySearchAppBar) {
+export default function SearchBar({ onEnter, filter, userInfo, diaries }: PrimarySearchAppBar) {
   const classes = useStyles();
 
   const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);
@@ -122,6 +126,8 @@ export default function SearchBar({ onEnter, filter, userInfo }: PrimarySearchAp
     if ('Enter' === event.key)
       onEnter(inputRef.current ? inputRef.current.value : "");
   }, [onEnter]);
+
+  const handleDownloadClick = useCallback(() => downloadDiaries(diaries), [diaries]);
   
   return (
     <div className={classes.grow}>
@@ -155,6 +161,9 @@ export default function SearchBar({ onEnter, filter, userInfo }: PrimarySearchAp
               id={filterId}
             />
           </div>
+          <IconButton color='inherit' onClick={handleDownloadClick}>
+            <CloudDownloadIcon />
+          </IconButton>
           <UserMenu userName={userInfo.userName} onLogout={userInfo.onLogout} />
         </Toolbar>
       </AppBar>
@@ -194,7 +203,7 @@ function SearchTextField({ onKeyPress, onFilterClick, filterId, filterEnabled, i
         color={filterEnabled ? 'secondary' : 'inherit'}
         onClick={onFilterClick}
       >
-      <FilterListIcon />
+        <FilterListIcon />
       </IconButton>
     </>
   );

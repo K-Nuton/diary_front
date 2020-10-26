@@ -33,26 +33,21 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const [open, edit, setModalStatus] = useModal(false, false);
   const [filter, setFilter, getDates] = useSearchBar();
 
-  const onSearch = useCallback(getSearchHandler(
+  const onSearch = getSearchHandler(
     innerUserId,
     setFilter,
     setModalStatus,
     setDiaries,
     setResetPage,
     getDates
-  ), []);
+  );
 
   const onSelected = useCallback((target: Diary) => {
     setTarget(target);
     setModalStatus(true, false);
   }, [setModalStatus, setTarget]);
 
-  // 初回検索
-  useEffect(() => {
-    onSearch("")
-  }, [onSearch]);
-
-  const handleModalClose = useCallback(() => setModalStatus(false, null), []);
+  const handleModalClose = useCallback(() => setModalStatus(false, null), [setModalStatus]);
 
   const createNew = useCallback(() => {
     setTarget(getDiaryTemplate(
@@ -62,14 +57,21 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   }, [innerUserId, setTarget, setModalStatus, setFilter, onSearch]);
   
   const toggleEdit = useCallback(
-    (edit: boolean) => setModalStatus(null, edit), [setModalStatus]
+    () => setModalStatus(null, true), [setModalStatus]
   );
+
+  // 初回検索
+  useEffect(() => {
+    onSearch("")
+  }, []);
+
   return (  
     <>
       <SearchBar 
         onEnter={onSearch} 
         filter={filter} 
         userInfo={userInfo}
+        diaries={diaries}
       />
       <DiaryList 
         diaries={diaries} 
@@ -80,7 +82,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         diary={target} 
         open={open} 
         edit={edit} 
-        toggleEdit={toggleEdit} 
+        enterEdit={toggleEdit} 
         onClose={handleModalClose}
       />
       <Fab 

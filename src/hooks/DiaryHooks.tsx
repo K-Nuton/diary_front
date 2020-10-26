@@ -1,19 +1,24 @@
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React, { useState } from 'react';
 import { Filter } from '../components/SearchBar';
-import { Diary } from '../model/Diary';
+import { Diary, Feeling, Wheather } from '../model/Diary';
 import { fixDate } from '../utils/TimeUtils';
 
 export function useDiaryList(): [
   Diary[],
-  Diary | null,
+  Diary,
   boolean,
   React.Dispatch<React.SetStateAction<Diary[]>>,
-  React.Dispatch<React.SetStateAction<Diary | null>>,
+  React.Dispatch<React.SetStateAction<Diary>>,
   React.Dispatch<React.SetStateAction<boolean>>
 ] {
   const [diaries, setDiaries] = useState<Diary[]>([]);
-  const [target, setTarget] = useState<Diary | null>(null);
+  const [target, setTarget] = useState<Diary>({
+    date: new Date(),
+    wheather: Wheather.SUNNY,
+    feeling: Feeling.HAPPY,
+    text: ''
+  });
   const [resetPage, setResetPage] = useState(false);
 
   return [diaries, target, resetPage, setDiaries, setTarget, setResetPage];

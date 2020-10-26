@@ -1,7 +1,7 @@
 import { createStyles, FormControl, InputBase, makeStyles, MenuItem, Modal, Select, Theme } from '@material-ui/core';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DateTimePicker } from '@material-ui/pickers';
 
 import Fab from '@material-ui/core/Fab';
@@ -14,15 +14,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import {
   Diary, Wheather, Feeling, decodeWheather, decodeFeeling
 } from '../model/Diary';
-import DiaryAPI from '../utils/DiaryAPI';
 import useEditModal from '../hooks/EditModalHooks';
-
-const emptyDiary: Diary = {
-  date: new Date(),
-  wheather: Wheather.SUNNY,
-  feeling: Feeling.HAPPY,
-  text: ''
-};
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -78,27 +70,25 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 type DiaryModal = {
-  diary: Diary | null;
+  diary: Diary;
   open: boolean;
   edit: boolean;
-  toggleEdit: (edit: boolean) => void;
+  enterEdit: () => void;
   onClose: () => void;
 }
-export default function DiaryModal({ diary, open, edit, toggleEdit, onClose }: DiaryModal): JSX.Element {
+export default function DiaryModal({ diary, open, edit, enterEdit, onClose }: DiaryModal): JSX.Element {
   const classes = useStyles();
-
-  const enterEdit = () => toggleEdit(true);
 
   const normalBody = (
     <ViewBody
-      diary={diary ? diary : emptyDiary}
+      diary={diary}
       onClick={enterEdit}
     />
   );
 
   const editBody = (
     <EditBody
-      diary={diary ? diary : emptyDiary}
+      diary={diary}
     />
   );
 
