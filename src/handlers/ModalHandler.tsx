@@ -1,11 +1,12 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
 import DiaryAPI from "../utils/DiaryAPI";
+import { OnSearch } from "./SearchHandler";
 
 export default function getDiaryTemplate(
   inner_user_id: number,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
+  onSearch: OnSearch,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): SelectTarget {
   const diary = getEmpty(inner_user_id);
@@ -33,7 +34,7 @@ function getEmpty(inner_user_id: number): Diary {
 function getSaveHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
+  onSearch: OnSearch,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
   if (target.inner_user_id === undefined) throw new Error('ログインしなおしてください');
@@ -61,7 +62,7 @@ function getSaveHandler(
 
     } finally {
       setFilter(date, date, false, true);
-      onSearch("");
+      onSearch("", date, date);
       setModalStatus(false, null);
     }
   }

@@ -1,22 +1,26 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
 import DiaryAPI from "../utils/DiaryAPI";
+import { fixDate } from "../utils/TimeUtils";
 
+export type OnSearch = (input: string, from?: Date, to?: Date) => Promise<void>;
 export default function searchDiaries(
   inner_user_id: number,
   setDiaries: (value: React.SetStateAction<Diary[]>) => void,
   setPage: (value: React.SetStateAction<boolean>) => void,
   getDates: () => [Date | null, Date | null]
-): (input: string) => Promise<void> {
-  return async function onSearch(input: string): Promise<void> {
+): OnSearch {
+  return async function onSearch(input: string, from, to): Promise<void> {
     const text: string | null = input === "" ? null : input;
-    const [from, to] = getDates();
+
+    const dates = (from && to) ? [fixDate(from, true), fixDate(to, false)] : getDates();
+
     try {
       const diaries = await DiaryAPI.search(
         inner_user_id,
         text,
-        from,
-        to
+        dates[0],
+        dates[1]
       );
 
       setDiaries(diaries);
@@ -32,7 +36,7 @@ export default function searchDiaries(
 export function getHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
+  onSearch: OnSearch,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): SelectTarget {
   return {
@@ -46,7 +50,7 @@ export function getHandler(
 function getSaveHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
+  onSearch: OnSearch,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
   return async ({ date, wheather, feeling, text }) => {
@@ -81,7 +85,7 @@ function getSaveHandler(
       alert(`更新できませんでした。 詳細: ${e.message}`);
     } finally {
       setFilter(date, date, false, true);
-      onSearch("");
+      onSearch("", date, date);
       setModalStatus(false, null);
     }
   }
@@ -90,7 +94,7 @@ function getSaveHandler(
 function getDeleteHandler(
   target: Diary,
   setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
-  onSearch: (input: string) => void,
+  onSearch: OnSearch,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): () => Promise<void> {
   return async () => {
@@ -104,12 +108,12 @@ function getDeleteHandler(
     } catch(e) {
       alert(`削除できませんでした。 詳細: ${e.message}`);
     } finally {
-      const to = new Date();
+      const to =new Date();
+      const from = new Date(to.getFullYear(), to.getMonth()-2, to.getDate());
       setFilter(
-        new Date(to.getFullYear(), to.getMonth()-2, to.getDate()),
-        to, false, false
+        from, to, false, false
       );
-      onSearch("");
+      onSearch("", from, to);
       setModalStatus(false, null)
     }
   }
