@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { fade, makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -183,21 +183,21 @@ export default function SearchBar({ onEnter, filter, userInfo }: PrimarySearchAp
   const filterOpen = Boolean(filterAnchor);
   const filterId = filterOpen ? 'filter-popover' : undefined;
   
-  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleFilterClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     setFilterAnchor(event.currentTarget);
-  };
+  }, [setFilterAnchor]);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleFilterClose = () => {
+  const handleFilterClose = useCallback(() => {
     onEnter(inputRef.current ? inputRef.current.value : "");
     setFilterAnchor(null);
-  };
+  }, [onEnter, setFilterAnchor]);
 
-  const handleInputEnter = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+  const handleInputEnter = useCallback((event: React.KeyboardEvent<HTMLDivElement>): void => {
     if ('Enter' === event.key)
       onEnter(inputRef.current ? inputRef.current.value : "");
-  };
+  }, [onEnter]);
   
   return (
     <div className={classes.grow}>
