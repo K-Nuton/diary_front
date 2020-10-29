@@ -1,12 +1,13 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
-import DiaryAPI from "../utils/DiaryAPI";
+import DiaryAPI, { SearchResponse } from "../utils/DiaryAPI";
 import { fixDate } from "../utils/TimeUtils";
 
 export type OnSearch = (input: string, from?: Date, to?: Date) => Promise<void>;
 export default function searchDiaries(
   inner_user_id: number,
   setDiaries: (value: React.SetStateAction<Diary[]>) => void,
+  setOriginal: (value: React.SetStateAction<SearchResponse>) => void,
   setPage: (value: React.SetStateAction<boolean>) => void,
   getDates: () => [Date | null, Date | null]
 ): OnSearch {
@@ -16,13 +17,14 @@ export default function searchDiaries(
     const dates = (from && to) ? [fixDate(from, true), fixDate(to, false)] : getDates();
 
     try {
-      const diaries = await DiaryAPI.search(
+      const { diaries, original } = await DiaryAPI.search(
         inner_user_id,
         text,
         dates[0],
         dates[1]
       );
 
+      setOriginal({ ...original });
       setDiaries(diaries);
     } catch(e) {
       setDiaries([]);

@@ -10,6 +10,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 
+import { date2String } from '../utils/TimeUtils';
 import { Diary, decodeWheather, decodeFeeling } from '../model/Diary';
 
 type Column = {
@@ -21,9 +22,9 @@ type Column = {
 };
 
 const columns: Column[] = [
-  { id: 'date', label: 'Date', minWidth: 20, format: (value: Date) => value.toLocaleString() },
-  { id: 'wheather', label: 'Weather', minWidth: 20, format: (value: number) => decodeWheather(value) },
-  { id: 'feeling', label: 'Feelings', minWidth: 20, format: (value: number) => decodeFeeling(value) },
+  { id: 'date', label: 'Date', minWidth: 50, format: (value: Date) => date2String(value) },
+  { id: 'wheather', label: '', minWidth: 50, format: (value: number) => decodeWheather(value) },
+  { id: 'feeling', label: '', minWidth: 50, format: (value: number) => decodeFeeling(value) },
   { id: 'text', label: 'Export', minWidth: 170, format: (value: string) => value.length > 100 ? value.slice(0, 100) + '...' : value }
 ];
 
@@ -32,7 +33,7 @@ const useStyles = makeStyles({
     width: '100%'
   },
   container: {
-    height: 'calc(100vh - 110px)'
+    height: 'calc(100vh - 115px)'
   },
   pagment: {
     position: 'absolute',
@@ -44,15 +45,19 @@ const useStyles = makeStyles({
   },
   row: {
     cursor: 'pointer'
+  },
+  rowIndexColor: {
+    backgroundColor: "#e6f6ea"
   }
 });
 
 type DiaryList = {
   diaries: Diary[];
-  onSelected: (target: Diary) => void;
   pageReset: boolean;
+  onSelected: (target: Diary) => void;
+  onReverse: (diaries: Diary[]) => void;
 };
-export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList) {
+export default function DiaryList({ diaries, pageReset, onSelected, onReverse }: DiaryList) {
   const classes = useStyles();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -66,6 +71,8 @@ export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList)
     setPage(0);
   }, []);
 
+  const handleReverse = useCallback(() => onReverse(diaries), [diaries, onReverse]);
+
   useEffect(() => pageReset ? setPage(0) : void(0), [pageReset]);
 
   return (
@@ -73,7 +80,7 @@ export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList)
       <TableContainer className={classes.container}>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
-            <TableRow>
+            <TableRow onClick={handleReverse}>
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
@@ -86,10 +93,10 @@ export default function DiaryList({ diaries, onSelected, pageReset }: DiaryList)
             </TableRow>
           </TableHead>
           <TableBody>
-            {diaries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((diary) => {
+            {diaries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((diary, index) => {
               return (
                 <TableRow
-                  className={classes.row}
+                  className={classes.row + " " + (index%2===0 ? classes.rowIndexColor : "")}
                   key={diary.diary_id}
                   hover 
                   role="checkbox" 

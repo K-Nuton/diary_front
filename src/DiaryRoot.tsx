@@ -29,13 +29,14 @@ type DiaryRoot = {
 const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const classes = useStyles();
 
-  const [diaries, target, resetPage, setDiaries, setTarget, setResetPage] = useDiaryList();
+  const [diaries, original, target, resetPage, setDiaries, setOriginal, setTarget, setResetPage] = useDiaryList();
   const [open, edit, setModalStatus] = useModal(false, false);
   const [filter, setFilter, getDates] = useSearchBar();
 
   const onSearch = useCallback(searchDiaries(
     innerUserId,
     setDiaries,
+    setOriginal,
     setResetPage,
     getDates
   ), [innerUserId, searchDiaries, setDiaries, setResetPage, getDates]);
@@ -49,6 +50,8 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     ));
     setModalStatus(true, false);
   }, [onSearch, setFilter, setModalStatus, setTarget]);
+
+  const onReverse = useCallback((diaries: Diary[]) => setDiaries([...diaries].reverse()), [setDiaries]);
 
   const handleModalClose = useCallback(() => setModalStatus(false, null), [setModalStatus]);
 
@@ -75,12 +78,13 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
         onEnter={onSearch} 
         filter={filter} 
         userInfo={userInfo}
-        diaries={diaries}
+        json={original}
       />
       <DiaryList 
         diaries={diaries} 
+        pageReset={resetPage}
         onSelected={onSelected} 
-        pageReset={resetPage} 
+        onReverse={onReverse} 
       />
       <DiaryModal 
         selectTarget={target} 

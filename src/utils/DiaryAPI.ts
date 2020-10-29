@@ -1,6 +1,9 @@
 import { RawDiary, Diary } from '../model/Diary';
 import encodeDate, { fixDate } from './TimeUtils';
 
+export type SearchResponse = {
+  diaries: RawDiary[]
+};
 export default class DiaryAPI {
   private static URI = '../web_diary/';
   private static DIARY = 'diary/';
@@ -19,7 +22,10 @@ export default class DiaryAPI {
     searchInput: string | null, 
     fromDate: Date | null, 
     toDate: Date | null
-  ): Promise<Diary[]> {
+  ): Promise<{
+    diaries: Diary[],
+    original: SearchResponse
+  }> {
 
     let date: Date | null;
     let end_date: Date | null;
@@ -34,7 +40,7 @@ export default class DiaryAPI {
       end_date = null;
     }
 
-    if (!fromDate && !toDate && !searchInput) return [];
+    if (!fromDate && !toDate && !searchInput) return { diaries: [], original: { diaries: [] } };
 
     const body = {
       inner_user_id,
@@ -54,9 +60,12 @@ export default class DiaryAPI {
 
     if (!res.ok) throw new Error(res.statusText);
 
-    const raws: RawDiary[] = (await res.json()).diaries;
+    const json: SearchResponse = await res.json();
 
-    return raws.map(this.encodeRaw2Diary).reverse();
+    return {
+      diaries: json.diaries.map(this.encodeRaw2Diary).reverse(),
+      original: json
+    };
   }
 
   public static async insert(

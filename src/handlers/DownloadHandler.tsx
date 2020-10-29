@@ -1,10 +1,10 @@
-import { Diary, RawDiary } from "../model/Diary";
-import encodeDate from "../utils/TimeUtils";
+import { SearchResponse } from "../utils/DiaryAPI";
 
-export function downloadDiaries(diaries: Diary[]): void {
-  const raws = [...diaries].reverse().map(encodeDiary2Raw);
+export function downloadDiaries(json: SearchResponse): void {
+  const result = window.confirm('日記JSONをダウンロードします');
+  if (!result) return;
 
-  const fileStr = JSON.stringify({diaries: raws});
+  const fileStr = JSON.stringify(json);
 
   const blob = new Blob(
     [fileStr],
@@ -15,16 +15,4 @@ export function downloadDiaries(diaries: Diary[]): void {
   link.href = window.URL.createObjectURL(blob);
   link.download = 'diaries.json';
   link.click();
-}
-
-function encodeDiary2Raw(diary: Diary): RawDiary {
-  return {
-    inner_user_id: diary.inner_user_id || 0,
-    diary_id: diary.diary_id || 0,
-    date: encodeDate(diary.date),
-    update_date: encodeDate(diary.update_date || new Date()),
-    wheather: diary.wheather,
-    feeling: diary.feeling,
-    text: diary.text
-  }
 }

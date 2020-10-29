@@ -23,3 +23,17 @@ export function fixDate(date: Date, begin: boolean): Date {
 function zeroPadding(num: number): string {
   return ('0' + num).slice(-2);
 }
+
+export function date2String(date: Date): string {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+
+  return `${year}/${month}/${day} ${getDayOfTheWeek(date)} ${hours}:${minutes}`;
+}
+
+function getDayOfTheWeek(date: Date): string {
+  return ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
+}

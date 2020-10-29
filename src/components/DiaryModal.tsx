@@ -16,6 +16,7 @@ import {
 } from '../model/Diary';
 import useEditModal from '../hooks/EditModalHooks';
 import { SelectTarget } from '../hooks/DiaryHooks';
+import { date2String } from '../utils/TimeUtils';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -126,7 +127,7 @@ export function ViewBody({ diary, onClick }: ViewBody) {
   return (
     <div className={classes.paper}>
       <h2 id='transition-modal-title'>
-        {diary.date.toLocaleString() + " " + decodeWheather(diary.wheather) + " " + decodeFeeling(diary.feeling)}
+        {date2String(diary.date) + " " + decodeWheather(diary.wheather) + " " + decodeFeeling(diary.feeling)}
       </h2>
       <p id='transition-modal-description' className={classes.textOverFlow}>{diary.text}</p>
       <div className={classes.enterEdit}>

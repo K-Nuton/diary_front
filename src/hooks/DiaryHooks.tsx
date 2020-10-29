@@ -2,6 +2,7 @@ import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
 import React, { useState } from 'react';
 import { Filter } from '../components/SearchBar';
 import { Diary, Feeling, Wheather } from '../model/Diary';
+import { SearchResponse } from '../utils/DiaryAPI';
 import { fixDate } from '../utils/TimeUtils';
 
 export type SelectTarget = {
@@ -13,13 +14,16 @@ export type SelectTarget = {
 
 export function useDiaryList(): [
   Diary[],
+  SearchResponse,
   SelectTarget,
   boolean,
   React.Dispatch<React.SetStateAction<Diary[]>>,
+  React.Dispatch<React.SetStateAction<SearchResponse>>,
   React.Dispatch<React.SetStateAction<SelectTarget>>,
   React.Dispatch<React.SetStateAction<boolean>>
 ] {
   const [diaries, setDiaries] = useState<Diary[]>([]);
+  const [original, setOriginal] = useState<SearchResponse>({ diaries: [] });
 
   const [target, setTarget] = useState<SelectTarget>({
     diary: {
@@ -34,7 +38,7 @@ export function useDiaryList(): [
   });
   const [resetPage, setResetPage] = useState(false);
 
-  return [diaries, target, resetPage, setDiaries, setTarget, setResetPage];
+  return [diaries, original, target, resetPage, setDiaries, setOriginal, setTarget, setResetPage];
 }
 
 export function useModal(init_open: boolean, init_edit: boolean): [

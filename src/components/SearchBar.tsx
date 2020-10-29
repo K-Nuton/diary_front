@@ -15,8 +15,8 @@ import FilterListIcon from '@material-ui/icons/FilterList';
 import { FormControlLabel, Popover, Switch } from '@material-ui/core';
 import { DatePicker } from '@material-ui/pickers';
 import { MaterialUiPickersDate } from '@material-ui/pickers/typings/date';
-import { Diary } from '../model/Diary';
 import { downloadDiaries } from '../handlers/DownloadHandler';
+import { SearchResponse } from '../utils/DiaryAPI';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -102,9 +102,9 @@ type PrimarySearchAppBar = {
     userName: string;
     onLogout: () => void;
   },
-  diaries: Diary[]
+  json: SearchResponse
 };
-export default function SearchBar({ onEnter, filter, userInfo, diaries }: PrimarySearchAppBar) {
+export default function SearchBar({ onEnter, filter, userInfo, json }: PrimarySearchAppBar) {
   const classes = useStyles();
 
   const [filterAnchor, setFilterAnchor] = useState<HTMLButtonElement | null>(null);
@@ -127,7 +127,7 @@ export default function SearchBar({ onEnter, filter, userInfo, diaries }: Primar
       onEnter(inputRef.current ? inputRef.current.value : "");
   }, [onEnter]);
 
-  const handleDownloadClick = useCallback(() => downloadDiaries(diaries), [diaries]);
+  const handleDownloadClick = useCallback(() => downloadDiaries(json), [json]);
   
   return (
     <div className={classes.grow}>
@@ -200,7 +200,7 @@ function SearchTextField({ onKeyPress, onFilterClick, filterId, filterEnabled, i
         aria-label="date-filter"
         aria-controls={filterId}
         aria-haspopup="true"
-        color={filterEnabled ? 'secondary' : 'inherit'}
+        color={filterEnabled ? 'inherit' : 'secondary'}
         onClick={onFilterClick}
       >
         <FilterListIcon />
