@@ -31,7 +31,7 @@ export function date2String(date: Date): string {
   const hours = date.getHours();
   const minutes = date.getMinutes();
 
-  return `${year}/${month}/${day} ${getDayOfTheWeek(date)} ${hours}:${minutes}`;
+  return `${year}/${zeroPadding(month)}/${zeroPadding(day)} ${getDayOfTheWeek(date)} ${zeroPadding(hours)}:${zeroPadding(minutes)}`;
 }
 
 function getDayOfTheWeek(date: Date): string {
