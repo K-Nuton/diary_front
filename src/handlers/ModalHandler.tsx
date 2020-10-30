@@ -1,17 +1,18 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
 import DiaryAPI from "../utils/DiaryAPI";
-import { OnSearch } from "./SearchHandler";
+import { getHandler, OnSearch } from "./SearchHandler";
 
 export default function getDiaryTemplate(
   inner_user_id: number,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: OnSearch,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void
+  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
+  setModalStatus: (open: boolean | null, edit: boolean | null) => void,
+  setTarget: React.Dispatch<React.SetStateAction<SelectTarget>>
 ): SelectTarget {
   const diary = getEmpty(inner_user_id);
 
-  const saveHandler = getSaveHandler(diary, setFilter, onSearch, setModalStatus);
+  const saveHandler = getSaveHandler(diary, onSearch, setFilter, setModalStatus, setTarget);
   const deleteHandler = getDeleteAndCancelHandler(setModalStatus);
   return {
     diary,
@@ -33,9 +34,10 @@ function getEmpty(inner_user_id: number): Diary {
 
 function getSaveHandler(
   target: Diary,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: OnSearch,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void
+  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
+  setModalStatus: (open: boolean | null, edit: boolean | null) => void,
+  setTarget: React.Dispatch<React.SetStateAction<SelectTarget>>
 ): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
   if (target.inner_user_id === undefined) throw new Error('ログインしなおしてください');
 
@@ -49,21 +51,30 @@ function getSaveHandler(
     if (!result) return;
 
     try {
-      await DiaryAPI.insert(
+      const result = await DiaryAPI.insert(
         target.inner_user_id as number,
         date,
         wheather,
         feeling,
         text
       );
+      
+      setTarget(getHandler(
+        result,
+        onSearch,
+        setFilter,
+        setModalStatus,
+        setTarget
+      ));
 
     } catch(e) {
       alert(`作成できませんでした。 詳細: ${e.message}`);
 
     } finally {
-      setFilter(date, date, false, true);
-      onSearch("", date, date);
-      setModalStatus(false, null);
+      const from = new Date(date.getFullYear(), date.getMonth() - 2, date.getDate());
+      setFilter(from, date, false, false);
+      onSearch("", from, date);
+      setModalStatus(true, false);
     }
   }
 }

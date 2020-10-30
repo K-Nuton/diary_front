@@ -37,23 +37,25 @@ export default function searchDiaries(
 
 export function getHandler(
   target: Diary,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: OnSearch,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void
+  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
+  setModalStatus: (open: boolean | null, edit: boolean | null) => void,
+  setTarget: React.Dispatch<React.SetStateAction<SelectTarget>>
 ): SelectTarget {
   return {
     diary: target,
-    saveHandler: getSaveHandler(target, setFilter, onSearch, setModalStatus),
-    deleteHandler: getDeleteHandler(target, setFilter, onSearch, setModalStatus),
-    cancelHandler: getCancelHandler(target, setModalStatus)
+    saveHandler: getSaveHandler(target, onSearch, setFilter, setModalStatus, setTarget),
+    deleteHandler: getDeleteHandler(target, onSearch, setFilter, setModalStatus),
+    cancelHandler: getCancelHandler(setModalStatus)
   };
 }
 
 function getSaveHandler(
   target: Diary,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: OnSearch,
-  setModalStatus: (open: boolean | null, edit: boolean | null) => void
+  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
+  setModalStatus: (open: boolean | null, edit: boolean | null) => void,
+  setTarget: React.Dispatch<React.SetStateAction<SelectTarget>>
 ): ({ date, wheather, feeling, text }: Diary) => Promise<void> {
   return async ({ date, wheather, feeling, text }) => {
     const dateHasChanged = target.date.getTime() !== date.getTime();
@@ -76,27 +78,37 @@ function getSaveHandler(
     if (!result) return;
 
     try {
-      await DiaryAPI.update(
+      const updatedDiary = await DiaryAPI.update(
         target.diary_id,
         dateHasChanged ? date : null,
         wheatherHasChanged ? wheather : null,
         feelingHasChanged ? feeling : null,
         textHasChanged ? text : null
       );
+
+      setTarget(getHandler(
+        updatedDiary,
+        onSearch,
+        setFilter,
+        setModalStatus,
+        setTarget
+      ));
+
     } catch(e) {
       alert(`更新できませんでした。 詳細: ${e.message}`);
     } finally {
-      setFilter(date, date, false, true);
-      onSearch("", date, date);
-      setModalStatus(false, null);
+      const from = new Date(date.getFullYear(), date.getMonth() - 2, date.getDate());
+      setFilter(from, date, false, false);
+      onSearch("", from, date);
+      setModalStatus(true, false);
     }
   }
 }
 
 function getDeleteHandler(
   target: Diary,
-  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   onSearch: OnSearch,
+  setFilter: (from: Date, to: Date, fromDisabled: boolean, toDisabled: boolean) => void,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): () => Promise<void> {
   return async () => {
@@ -106,10 +118,6 @@ function getDeleteHandler(
     if (target.diary_id === undefined) return;
     try {
       await DiaryAPI.delete(target.diary_id);
-  
-    } catch(e) {
-      alert(`削除できませんでした。 詳細: ${e.message}`);
-    } finally {
       const to =new Date();
       const from = new Date(to.getFullYear(), to.getMonth()-2, to.getDate());
       setFilter(
@@ -117,17 +125,19 @@ function getDeleteHandler(
       );
       onSearch("", from, to);
       setModalStatus(false, null)
+  
+    } catch(e) {
+      alert(`削除できませんでした。 詳細: ${e.message}`);
     }
   }
 }
 
 function getCancelHandler(
-  target: Diary,
   setModalStatus: (open: boolean | null, edit: boolean | null) => void
 ): () => Promise<void> {
   return async () => {
     const result = window.confirm('変更を破棄します');
     if (!result) return;
-    setModalStatus(false, null);
+    setModalStatus(true, false);
   };
 }

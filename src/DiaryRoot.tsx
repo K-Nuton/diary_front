@@ -44,9 +44,10 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const onSelected = useCallback((target: Diary) => {
     setTarget(getHandler(
       target,
-      setFilter,
       onSearch,
-      setModalStatus
+      setFilter, 
+      setModalStatus,
+      setTarget
     ));
     setModalStatus(true, false);
   }, [onSearch, setFilter, setModalStatus, setTarget]);
@@ -57,7 +58,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
 
   const createNew = useCallback(() => {
     setTarget(getDiaryTemplate(
-      innerUserId, setFilter, onSearch, setModalStatus
+      innerUserId, onSearch, setFilter, setModalStatus, setTarget
     ));
     setModalStatus(true, true);
   }, [innerUserId, setTarget, setModalStatus, setFilter, onSearch]);

@@ -92,7 +92,7 @@ export default class DiaryAPI {
 
     if (!res.ok) throw new Error(res.statusText);
 
-    return (await res.json()) as Diary;
+    return this.encodeRaw2Diary(await res.json());
   }
 
   public static async update(
@@ -122,7 +122,7 @@ export default class DiaryAPI {
 
     if (!res.ok) throw new Error(res.statusText);
 
-    return (await res.json()) as Diary;
+    return this.encodeRaw2Diary(await res.json());
   }
 
   public static async delete(diary_id: number): Promise<void> {
