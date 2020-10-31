@@ -8,6 +8,7 @@ import DiaryModal from './components/DiaryModal';
 import { useDiaryList, useModal, useSearchBar } from './hooks/DiaryHooks';
 import searchDiaries, { getHandler } from './handlers/SearchHandler';
 import getDiaryTemplate from './handlers/ModalHandler';
+import Modal from './model/ModalStatus';
 
 const useStyles = makeStyles((theme: Theme) => 
   createStyles({
@@ -30,7 +31,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
   const classes = useStyles();
 
   const [diaries, original, target, resetPage, setDiaries, setOriginal, setTarget, setResetPage] = useDiaryList();
-  const [open, edit, setModalStatus] = useModal(false, false);
+  const [open, edit, setModalStatus] = useModal(...Modal.CLOSE_WITH_VIEW);
   const [filter, setFilter, getDates] = useSearchBar();
 
   const onSearch = useCallback(searchDiaries(
@@ -49,22 +50,22 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
       setModalStatus,
       setTarget
     ));
-    setModalStatus(true, false);
+    setModalStatus(...Modal.OPEN_WITH_VIEW);
   }, [onSearch, setFilter, setModalStatus, setTarget]);
 
   const onReverse = useCallback((diaries: Diary[]) => setDiaries([...diaries].reverse()), [setDiaries]);
 
-  const handleModalClose = useCallback(() => setModalStatus(false, null), [setModalStatus]);
+  const handleModalClose = useCallback(() => setModalStatus(...Modal.CLOSE), [setModalStatus]);
 
   const createNew = useCallback(() => {
     setTarget(getDiaryTemplate(
       innerUserId, onSearch, setFilter, setModalStatus, setTarget
     ));
-    setModalStatus(true, true);
+    setModalStatus(...Modal.OPEN_WITH_EDIT);
   }, [innerUserId, setTarget, setModalStatus, setFilter, onSearch]);
   
   const toggleEdit = useCallback(
-    () => setModalStatus(null, true), [setModalStatus]
+    () => setModalStatus(...Modal.EDIT), [setModalStatus]
   );
 
   // 初回検索

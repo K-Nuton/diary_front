@@ -1,5 +1,6 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
+import Modal from "../model/ModalStatus";
 import DiaryAPI from "../utils/DiaryAPI";
 import { getHandler, OnSearch } from "./SearchHandler";
 
@@ -74,7 +75,7 @@ function getSaveHandler(
       const from = new Date(date.getFullYear(), date.getMonth() - 2, date.getDate());
       setFilter(from, date, false, false);
       onSearch("", from, date);
-      setModalStatus(true, false);
+      setModalStatus(...Modal.OPEN_WITH_VIEW);
     }
   }
 }
@@ -86,6 +87,6 @@ function getDeleteAndCancelHandler(
     const result = window.confirm('入力を破棄してもよろしいですか?');
     if (!result) return;
 
-    setModalStatus(false, null);
+    setModalStatus(...Modal.CLOSE);
   }
 }

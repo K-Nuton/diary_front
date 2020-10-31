@@ -1,5 +1,6 @@
 import { SelectTarget } from "../hooks/DiaryHooks";
 import { Diary } from "../model/Diary";
+import Modal from "../model/ModalStatus";
 import DiaryAPI, { SearchResponse } from "../utils/DiaryAPI";
 import { fixDate } from "../utils/TimeUtils";
 
@@ -24,7 +25,7 @@ export default function searchDiaries(
         dates[1]
       );
 
-      setOriginal({ ...original });
+      setOriginal(original);
       setDiaries(diaries);
     } catch(e) {
       setDiaries([]);
@@ -100,7 +101,7 @@ function getSaveHandler(
       const from = new Date(date.getFullYear(), date.getMonth() - 2, date.getDate());
       setFilter(from, date, false, false);
       onSearch("", from, date);
-      setModalStatus(true, false);
+      setModalStatus(...Modal.OPEN_WITH_VIEW);
     }
   }
 }
@@ -124,7 +125,7 @@ function getDeleteHandler(
         from, to, false, false
       );
       onSearch("", from, to);
-      setModalStatus(false, null)
+      setModalStatus(...Modal.CLOSE)
   
     } catch(e) {
       alert(`削除できませんでした。 詳細: ${e.message}`);
@@ -138,6 +139,6 @@ function getCancelHandler(
   return async () => {
     const result = window.confirm('変更を破棄します');
     if (!result) return;
-    setModalStatus(true, false);
+    setModalStatus(...Modal.OPEN_WITH_VIEW);
   };
 }
