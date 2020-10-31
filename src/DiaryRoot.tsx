@@ -40,7 +40,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     setOriginal,
     setResetPage,
     getDates
-  ), [innerUserId, searchDiaries, setDiaries, setResetPage, getDates]);
+  ), [innerUserId, setOriginal, setDiaries, setResetPage, getDates]);
 
   const onSelected = useCallback((target: Diary) => {
     setTarget(getHandler(
@@ -53,7 +53,7 @@ const DiaryRoot: React.FC<DiaryRoot> = ({ innerUserId, userInfo }) => {
     setModalStatus(...Modal.OPEN_WITH_VIEW);
   }, [onSearch, setFilter, setModalStatus, setTarget]);
 
-  const onReverse = useCallback((diaries: Diary[]) => setDiaries([...diaries].reverse()), [setDiaries]);
+  const onReverse = useCallback((diaries: Diary[]) => setDiaries(([] as Diary[]).concat(diaries).reverse()), [setDiaries]);
 
   const handleModalClose = useCallback(() => setModalStatus(...Modal.CLOSE), [setModalStatus]);
 

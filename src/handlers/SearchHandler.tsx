@@ -12,7 +12,7 @@ export default function searchDiaries(
   setPage: (value: React.SetStateAction<boolean>) => void,
   getDates: () => [Date | null, Date | null]
 ): OnSearch {
-  return async function onSearch(input: string, from, to): Promise<void> {
+  return async function onSearch(input, from, to): Promise<void> {
     const text: string | null = input === "" ? null : input;
 
     const dates = (from && to) ? [fixDate(from, true), fixDate(to, false)] : getDates();
@@ -31,7 +31,7 @@ export default function searchDiaries(
       setDiaries([]);
     } finally {
       setPage(true);
-      setPage(false)
+      setPage(false);
     }
   };
 }
